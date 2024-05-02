@@ -2,18 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8"/>
-  <!-- <meta name="viewport" content="width=1080"/> -->
 
   <!-- X_ITE requirements -->
   <script src="https://create3000.github.io/code/x_ite/latest/x_ite.min.js"></script>
-  <script src="/js/OFFParser.js"></script>
-  <!-- <script type="importmap">
-		{
-			"imports": {
-				"x_ite": "https://create3000.github.io/code/x_ite/latest/x_ite.min.mjs"
-			}
-		}
-	</script> -->
+  <script src="./js/OFFParser.js"></script>
+
   <style>
     x3d-canvas {
       width: 45%;
@@ -21,25 +14,12 @@
       aspect-ratio: 1;
     }
   </style>
-  <!-- <script>
-    window .addEventListener ("load", function ()
-    {
-      const
-        touchSensor = document .querySelector ("TouchSensor"),
-        hitPoint    = document .querySelector ("#hitPoint");
-    
-      touchSensor .addEventListener ("hitPoint_changed", function (event)
-      {
-        hitPoint .textContent = event .detail .value;
-      });
-    });
-        </script> -->
 
 </head>
 <body>
   <!-- <x3d-canvas onclick="init()"> -->
-    <x3d-canvas src="/off/U1.off" onload="init()"></x3d-canvas>
-    <x3d-canvas src="/off/U2.off" onload="init()"></x3d-canvas>
+    <x3d-canvas src="./off/U1.off"></x3d-canvas>
+    <x3d-canvas src="./off/U2.off"></x3d-canvas>
   <!-- <x3d-canvas src="/dump/simple.x3d" onload="init()"> -->
 
   </x3d-canvas>
@@ -58,6 +38,4 @@
   <!-- <x3d-canvas filename="/off/wincube.off"></x3d-canvas> -->
   
   </body>
-  <!-- <script src="js/es-module-shims.js"></script> -->
-  <script src="/main-x_ite.js"></script>
 </html>

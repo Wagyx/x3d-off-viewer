@@ -45,11 +45,15 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          await this.loadComponents();
 
+         const background = scene.createNode("Background");
+         background.skyColor = [0.8, 0.8, 0.8];
+         scene.getRootNodes().push(background);
+         
          // Parse scene.
 
          this.shape();
-
-         return this.getScene();
+         
+         return scene;
       },
       textToPrimaries() {
          const _face_vertex_data_separator_pattern = /\s+/;
