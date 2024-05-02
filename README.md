@@ -7,7 +7,13 @@ It is using [X3D technology](www.x3dom.org) and the [X_ite library](https://crea
 
 Thanks to [Scott Vorthmann](https://github.com/vorth) for telling me about the X3D project.
 
-## How to Use it within your web page
+## How to run
+
+Start a web server 
+- using vscode live server extension or 
+- using a command line terminal and Python, cd to the project folder then run python -m http.server
+
+## How to use it within your web page
 
 Take a look at the x3d-off-viewer.html:
 
@@ -18,6 +24,9 @@ You can also set some other attributes:
 - edgeRadius
 
 ## TODOS
+- integrate off parser into x_ite
+- remove need for webserver to run
+- opacity
 - more parameters as attributes
 - an EnvironmentLight
 - instances for vertices and edges
