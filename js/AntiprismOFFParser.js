@@ -229,11 +229,12 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          // remove faces that are not colored
          const actualColors = [];
          const actualFaces = [];
-         const colorNode = scene.createNode("Color");
+         // const colorNode = scene.createNode("Color");
+         const colorNode = scene.createNode("ColorRGBA");
          for (let faceNum = 0; faceNum < faces.length; faceNum++) {
-            if (facesColor[faceNum].length == 4 && facesColor[faceNum][3] == 0.0) {
-               continue;
-            }
+            // if (facesColor[faceNum].length == 4 && facesColor[faceNum][3] == 0.0) {
+            //    continue;
+            // }
             actualColors.push(...facesColor[faceNum]);
             actualFaces.push(...faces[faceNum])
             actualFaces.push(-1);
@@ -263,14 +264,15 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             const point = vertices[i];
             const color = verticesColor[i];
 
-            if (color.length == 4 && color[3] == 0.0) {
-               continue;
-            }
+            // if (color.length == 4 && color[3] == 0.0) {
+            //    continue;
+            // }
 
             const shape = scene.createNode("Shape");
 
             const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(...color);
+            material.diffuseColor = new X3D.SFColor(color[0],color[1],color[2]);
+            material.transparency = 1-color[3];
             const appearance = scene.createNode("Appearance");
             appearance.material = material;
             shape.appearance = appearance;
@@ -294,9 +296,9 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          for (let i = 0, l = edges.length; i < l; ++i) {
             const e = edges[i];
             const color = edgesColor[i];
-            if (color.length == 4 && color[3] == 0.0) {
-               continue;
-            }
+            // if (color.length == 4 && color[3] == 0.0) {
+            //    continue;
+            // }
             const pt0 = vertices[e[0]];
             const pt1 = vertices[e[1]];
             const mid = pt0.lerp(pt1, 0.5);
@@ -310,7 +312,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
 
             const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(...color);
+            material.diffuseColor = new X3D.SFColor(color[0],color[1],color[2]);
+            material.transparency = 1-color[3];
             const appearance = scene.createNode("Appearance");
             appearance.material = material;
             const shape = scene.createNode("Shape");
@@ -332,11 +335,17 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          for (let el of colorStringArray) {
             isFloat = isFloat || el.includes(".");
          }
-         return colorStringArray.map(el => isFloat ? parseFloat(el, 10) : parseInt(el, 10) / 255.0);
+         const color = colorStringArray.map(el => isFloat ? parseFloat(el, 10) : parseInt(el, 10) / 255.0);
+         if (color.length < 4){
+            color.push(1)
+         }
+         console.log(color);
+         return color;
       },
 
       addMissingColors(obj) {
-         const gDefaultColor = { vertex: [1.0, 0.5, 0.0], edge: [0.8, 0.6, 0.8], face: [0.8, 0.9, 0.9] };
+         // const gDefaultColor = { vertex: [1.0, 0.5, 0.0], edge: [0.8, 0.6, 0.8], face: [0.8, 0.9, 0.9] };
+         const gDefaultColor = { vertex: [1.0, 0.5, 0.0, 1.0], edge: [0.8, 0.6, 0.8, 1.0], face: [0.8, 0.9, 0.9, 1.0] };
 
          for (let i = 0, l = obj.verticesColor.length; i < l; ++i) {
             if (obj.verticesColor[i] === undefined) {
