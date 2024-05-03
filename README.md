@@ -15,6 +15,14 @@ Start a web server
 
 ## How to use it within your web page
 
+### New way
+Take a look at the x_ite-off-viewer.html:
+
+First, link x_ite.min.js and AntiprismOFFParser.js.
+Then, use the "x3d-canvas" tag with the off file as the "src" attribute.
+
+
+### Old way
 Take a look at the x3d-off-viewer.html:
 
 First, link x_ite.min.js, main.js (at the end of the <body>).
@@ -24,9 +32,6 @@ You can also set some other attributes:
 - edgeRadius
 
 ## TODOS
-- integrate off parser into x_ite
-- remove need for webserver to run
-- opacity
 - more parameters as attributes
 - an EnvironmentLight
 - instances for vertices and edges

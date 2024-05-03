@@ -1,7 +1,7 @@
 
 // http://paulbourke.net/dataformats/off/
 // https://people.sc.fsu.edu/~jburkardt/data/off/off.html
-
+// This parser is extending the OFF format. By providing a description for lines and vertices.
 
 /*
  * Parser
@@ -46,13 +46,14 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          await this.loadComponents();
 
          const background = scene.createNode("Background");
-         background.skyColor = [0.8, 0.8, 0.8];
-         scene.getRootNodes().push(background);
-         
-         // Parse scene.
+         scene.addNamedNode("Background", background);
+         background.skyColor = new X3D.MFColor(new X3D.SFColor(0.8, 0.8, 0.8));
+         scene.rootNodes.push(background);
 
-         this.shape();
-         
+         // Parse scene.
+         const objectTransform = this.shape();
+         scene.rootNodes.push(objectTransform);
+
          return scene;
       },
       textToPrimaries() {
@@ -180,7 +181,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          // convert vertex data to THREE.js vectors
          const vertices = [];
-         let cnt = new X3D.SFVec3f(0,0,0);
+         let cnt = new X3D.SFVec3f(0, 0, 0);
          for (let v of offData.vertices) {
             const tmp = new X3D.SFVec3f(...v)
             cnt = cnt.add(tmp);
@@ -199,22 +200,35 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          for (let e of offData.edges) {
             edgesLength.push((vertices[e[1]].subtract(vertices[e[0]])).length());
          }
-         const scaleFactor = edgesLength.reduce((partialSum, a) => partialSum + a, 0)/edgesLength.length;
+         const scaleFactor = edgesLength.reduce((partialSum, a) => partialSum + a, 0) / edgesLength.length;
          for (let i = 0; i < vertices.length; i++) {
             vertices[i] = vertices[i].divide(scaleFactor);
          }
 
          // FACES
-         this.facesShape(vertices, offData.faces, offData.facesColor);
-         this.verticesShape(vertices, offData.verticesColor);
-         this.edgesShape(vertices, offData.edges, offData.edgesColor);
+         const scene = this.getExecutionContext();
+         const objectTransform = scene.createNode("Transform");
+         scene.addNamedNode("OffTransform", objectTransform);
+
+         const faceTransform = this.facesShape(vertices, offData.faces, offData.facesColor);
+         scene.addNamedNode("FacesTransform", faceTransform);
+         objectTransform.children.push(faceTransform);
+         
+         const edgeTransform = this.verticesShape(vertices, offData.verticesColor);
+         scene.addNamedNode("EdgesTransform", edgeTransform);
+         objectTransform.children.push(edgeTransform);
+         
+         const vertexTransform = this.edgesShape(vertices, offData.edges, offData.edgesColor);
+         scene.addNamedNode("VerticesTransform", vertexTransform);
+         objectTransform.children.push(vertexTransform);
+
+         return objectTransform;
       },
 
       facesShape(vertices, faces, facesColor) {
          const scene = this.getExecutionContext();
 
          const shape = scene.createNode("Shape");
-
          const appearance = scene.createNode("Appearance");
          const material = scene.createNode("Material");
          material.diffuseColor = X3D.Color3.White;
@@ -229,12 +243,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          // remove faces that are not colored
          const actualColors = [];
          const actualFaces = [];
-         // const colorNode = scene.createNode("Color");
          const colorNode = scene.createNode("ColorRGBA");
          for (let faceNum = 0; faceNum < faces.length; faceNum++) {
-            // if (facesColor[faceNum].length == 4 && facesColor[faceNum][3] == 0.0) {
-            //    continue;
-            // }
             actualColors.push(...facesColor[faceNum]);
             actualFaces.push(...faces[faceNum])
             actualFaces.push(-1);
@@ -252,27 +262,24 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          geometry.coord = coordinate;
 
          shape.geometry = geometry;
-         scene.getRootNodes().push(shape);
 
+         const transform = scene.createNode("Transform");
+         transform.children.push(shape);
+         return transform;
       },
 
       verticesShape(vertices, verticesColor) {
          const vertexRadius = 0.03;
          const scene = this.getExecutionContext();
+         const groupTransform = scene.createNode("Transform");
 
          for (let i = 0, l = vertices.length; i < l; ++i) {
-            const point = vertices[i];
-            const color = verticesColor[i];
-
-            // if (color.length == 4 && color[3] == 0.0) {
-            //    continue;
-            // }
-
             const shape = scene.createNode("Shape");
-
+            
+            const color = verticesColor[i];
             const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0],color[1],color[2]);
-            material.transparency = 1-color[3];
+            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
+            material.transparency = 1 - color[3];
             const appearance = scene.createNode("Appearance");
             appearance.material = material;
             shape.appearance = appearance;
@@ -282,23 +289,23 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             shape.geometry = geometry;
 
             const transform = scene.createNode("Transform");
+            const point = vertices[i];
             transform.translation = point;
             transform.children.push(shape);
 
-            scene.getRootNodes().push(transform);
+            groupTransform.children.push(transform);
          }
+         return groupTransform;
       },
 
       edgesShape(vertices, edges, edgesColor) {
          const scene = this.getExecutionContext();
+         const groupTransform = scene.createNode("Transform");
+
          const edgeRadius = 0.02;
          const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
          for (let i = 0, l = edges.length; i < l; ++i) {
             const e = edges[i];
-            const color = edgesColor[i];
-            // if (color.length == 4 && color[3] == 0.0) {
-            //    continue;
-            // }
             const pt0 = vertices[e[0]];
             const pt1 = vertices[e[1]];
             const mid = pt0.lerp(pt1, 0.5);
@@ -310,10 +317,10 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             transform.translation = mid;
             transform.rotation = rot;
 
-
+            const color = edgesColor[i];
             const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0],color[1],color[2]);
-            material.transparency = 1-color[3];
+            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
+            material.transparency = 1 - color[3];
             const appearance = scene.createNode("Appearance");
             appearance.material = material;
             const shape = scene.createNode("Shape");
@@ -324,10 +331,9 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             geometry.radius = edgeRadius;
             shape.geometry = geometry;
             transform.children.push(shape);
-            scene.getRootNodes().push(transform);
-
+            groupTransform.children.push(transform);
          }
-
+         return groupTransform;
       },
 
       parseColor(colorStringArray) {
@@ -336,10 +342,9 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             isFloat = isFloat || el.includes(".");
          }
          const color = colorStringArray.map(el => isFloat ? parseFloat(el, 10) : parseInt(el, 10) / 255.0);
-         if (color.length < 4){
+         if (color.length < 4) {
             color.push(1)
          }
-         console.log(color);
          return color;
       },
 
