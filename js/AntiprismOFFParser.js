@@ -201,6 +201,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             edgesLength.push((vertices[e[1]].subtract(vertices[e[0]])).length());
          }
          const scaleFactor = edgesLength.reduce((partialSum, a) => partialSum + a, 0) / edgesLength.length;
+         // console.log(Math.min.apply(Math, edgesLength));
+         // console.log(Math.max.apply(Math, edgesLength));
          for (let i = 0; i < vertices.length; i++) {
             vertices[i] = vertices[i].divide(scaleFactor);
          }
@@ -269,23 +271,17 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
       },
 
       verticesShape(vertices, verticesColor) {
-         const vertexRadius = 0.03;
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
          
-         // const geometryRef = scene.createNode("Sphere");
-         // scene.addNamedNode("VertexGeometry", geometryRef);
-         // geometryRef.radius = vertexRadius;
-         // groupTransform.children.push(geometryRef);
-         // console.log(geometryRef);
-         
-         // const instShape = scene.createNode("InstancesShape");
-         // instShape.translations = X3D.MFVec3f(vertices);
-         // instShape.geometry=geometryRef;
-         // groupTransform.children.push(shape);
+         const geometry = scene.createNode("Sphere");
+         scene.addNamedNode("VertexGeometry", geometry);
+         geometry.radius = 0.03;
+
 
          for (let i = 0, l = vertices.length; i < l; ++i) {
             const shape = scene.createNode("Shape");
+            shape.geometry = geometry;
             
             const color = verticesColor[i];
             const material = scene.createNode("Material");
@@ -294,12 +290,6 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             const appearance = scene.createNode("Appearance");
             appearance.material = material;
             shape.appearance = appearance;
-
-            const geometry = scene.createNode("Sphere");
-            scene.addNamedNode("VertexGeometry"+i, geometry);
-            // geometry.nodeNamedId = "VertexGeometry";
-            geometry.radius = vertexRadius;
-            shape.geometry = geometry;
 
             const transform = scene.createNode("Transform");
             const point = vertices[i];
@@ -314,8 +304,12 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
       edgesShape(vertices, edges, edgesColor) {
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
+         
+         const geometry = scene.createNode("Cylinder");
+         scene.addNamedNode("EdgeGeometry", geometry);
+         geometry.radius = 0.02;
+         geometry.height = 1;
 
-         const edgeRadius = 0.02;
          const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
          for (let i = 0, l = edges.length; i < l; ++i) {
             const e = edges[i];
@@ -323,12 +317,13 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             const pt1 = vertices[e[1]];
             const mid = pt0.lerp(pt1, 0.5);
             const direction = pt1.subtract(pt0);
-            const length = direction.length();
+            const dirLength = direction.length();
             const rot = new X3D.SFRotation(cylDir, direction);
 
             const transform = scene.createNode("Transform");
             transform.translation = mid;
             transform.rotation = rot;
+            transform.scale = new X3D.SFVec3f(1,dirLength,1);
 
             const color = edgesColor[i];
             const material = scene.createNode("Material");
@@ -339,9 +334,6 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             const shape = scene.createNode("Shape");
             shape.appearance = appearance;
 
-            const geometry = scene.createNode("Cylinder");
-            geometry.height = length;
-            geometry.radius = edgeRadius;
             shape.geometry = geometry;
             transform.children.push(shape);
             groupTransform.children.push(transform);

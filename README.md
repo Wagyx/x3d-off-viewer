@@ -12,17 +12,18 @@ Thanks to [Scott Vorthmann](https://github.com/vorth) for telling me about the X
 Start a web server 
 - using vscode live server extension or 
 - using a command line terminal and Python, cd to the project folder then run python -m http.server
+More details [here](https://create3000.github.io/x_ite/setup-a-localhost-server/)
 
 ## How to use it within your web page
 
-### New way
+### New way : using an integrated Parser for the OFF file
 Take a look at the x_ite-off-viewer.html:
 
 First, link x_ite.min.js and AntiprismOFFParser.js.
 Then, use the "x3d-canvas" tag with the off file as the "src" attribute.
 
 
-### Old way
+### Old way : building DOM elements
 Take a look at the x3d-off-viewer.html:
 
 First, link x_ite.min.js, main.js (at the end of the <body>).

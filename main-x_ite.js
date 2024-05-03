@@ -46,22 +46,16 @@ function modifyOff(event) {
     // console.log(event.target);
     // console.log("browser " + xBrowser.toXMLString());
 
-    let vertexRadius = event.target.getAttribute("vertexRadius");
+    const vertexRadius = event.target.getAttribute("vertexRadius");
     if (vertexRadius !== null) {
-        vertexRadius = parseFloat(vertexRadius, 10);
-        const vNodeTransform = scene.getNamedNode("VerticesTransform");
-        for (const node of vNodeTransform.children) {
-            node.children[0].geometry.radius = vertexRadius;
-        }
+        const geom = scene.getNamedNode("VertexGeometry");
+        geom.radius = parseFloat(vertexRadius, 10);
     }
 
-    let edgeRadius = event.target.getAttribute("edgeRadius");
+    const edgeRadius = event.target.getAttribute("edgeRadius");
     if (edgeRadius !== null) {
-        edgeRadius = parseFloat(edgeRadius, 10);
-        const vNodeTransform = scene.getNamedNode("EdgesTransform");
-        for (const node of vNodeTransform.children) {
-            node.children[0].geometry.radius = edgeRadius;
-        }
+        const geom = scene.getNamedNode("EdgeGeometry");
+        geom.radius = parseFloat(edgeRadius, 10);
     }
 
     const backgroundColor = event.target.getAttribute("backgroundColor");
