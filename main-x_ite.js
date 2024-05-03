@@ -64,43 +64,28 @@ function modifyOff(event) {
         background.skyColor = new X3D.MFColor(new X3D.SFColor(...parseColor(backgroundColor)));
     }
 
-    let rotationSpeed = event.target.getAttribute("rotationSpeed");
-    if (rotationSpeed === null) {
-        rotationSpeed = 0;
-    }
-    else {
-        rotationSpeed = parseFloat(rotationSpeed, 10);
-    }
-    let rotationAxis = event.target.getAttribute("rotationAxis");
-    if (rotationAxis === null) {
-        rotationAxis = [0, 1, 0];
-    }
-    else {
-        rotationAxis = parseArray(rotationAxis);
-    }
-    console.log(rotationSpeed);
-    console.log(rotationAxis);
-
-    const transformNode = scene.getNamedNode("OffTransform");
     // Animation
-    const
-        timeSensorNode = scene.createNode("TimeSensor"),
-        interpolatorNode = scene.createNode("OrientationInterpolator");
+    const transformNode = scene.getNamedNode("OffTransform");
 
-    timeSensorNode.cycleInterval = 100;
+    let rotationSpeed = event.target.getAttribute("rotationSpeed");
+    rotationSpeed = rotationSpeed !== null ? parseFloat(rotationSpeed, 10) : 0;
+    let rotationAxis = event.target.getAttribute("rotationAxis");
+    rotationAxis = rotationAxis !== null ? parseArray(rotationAxis) : [0, 1, 0];
+
+    const timeSensorNode = scene.createNode("TimeSensor");
+    timeSensorNode.cycleInterval = 2 * Math.PI / rotationSpeed;
     timeSensorNode.loop = true;
-
-    for (let i = 0; i < 50; ++i) {
-        interpolatorNode.key[i] = i / 49;
-        interpolatorNode.keyValue[i] = new X3D.SFRotation(rotationAxis[0], rotationAxis[1], rotationAxis[2], Math.PI * i / 2 * rotationSpeed);
+    
+    const interpolatorNode = scene.createNode("OrientationInterpolator");
+    for (let i = 0; i < 5; ++i) {
+        interpolatorNode.key[i] = i / 4;
+        interpolatorNode.keyValue[i] = new X3D.SFRotation(rotationAxis[0], rotationAxis[1], rotationAxis[2], Math.PI * i / 2);
     }
-
     scene.rootNodes.push(timeSensorNode, interpolatorNode);
-    // Routes
 
+    // Routes
     scene.addRoute(timeSensorNode, "fraction_changed", interpolatorNode, "set_fraction");
     scene.addRoute(interpolatorNode, "value_changed", transformNode, "set_rotation");
-
 
 }
 
