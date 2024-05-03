@@ -29,15 +29,15 @@ function init() {
     // scene.getRootNodes().push(background);
 
     console.log("browser " + xBrowser.toXMLString());
-    
+
 }
 
-function parseColor(colString){
-    return colString.split(",").map(x => parseFloat(x,10)/255.0);
+function parseColor(colString) {
+    return colString.split(",").map(x => parseFloat(x, 10) / 255.0);
 }
 
-function parseArray(arrString){
-    return arrString.split(",").map(x => parseFloat(x,10)/255.0);
+function parseArray(arrString) {
+    return arrString.split(",").map(x => parseFloat(x, 10) / 255.0);
 }
 
 function modifyOff(event) {
@@ -46,40 +46,47 @@ function modifyOff(event) {
     // console.log(event.target);
     // console.log("browser " + xBrowser.toXMLString());
 
-    const vertexRadius = event.target.getAttribute("vertexRadius");
+    let vertexRadius = event.target.getAttribute("vertexRadius");
     if (vertexRadius !== null) {
-        parseFloat(vertexRadius,10);
+        vertexRadius = parseFloat(vertexRadius, 10);
+        const vNodeTransform = scene.getNamedNode("VerticesTransform");
+        for (const node of vNodeTransform.children) {
+            node.children[0].geometry.radius = vertexRadius;
+        }
     }
 
-    const edgeRadius = event.target.getAttribute("edgeRadius");
+    let edgeRadius = event.target.getAttribute("edgeRadius");
     if (edgeRadius !== null) {
-        parseFloat(edgeRadius,10);
+        edgeRadius = parseFloat(edgeRadius, 10);
+        const vNodeTransform = scene.getNamedNode("EdgesTransform");
+        for (const node of vNodeTransform.children) {
+            node.children[0].geometry.radius = edgeRadius;
+        }
     }
-    
+
     const backgroundColor = event.target.getAttribute("backgroundColor");
-    console.log(backgroundColor);
-    if (backgroundColor !== null){
+    if (backgroundColor !== null) {
         const background = scene.getNamedNode("Background");
         background.skyColor = new X3D.MFColor(new X3D.SFColor(...parseColor(backgroundColor)));
     }
 
     let rotationSpeed = event.target.getAttribute("rotationSpeed");
-    if (rotationSpeed === null){
+    if (rotationSpeed === null) {
         rotationSpeed = 0;
     }
-    else{
-        rotationSpeed=parseFloat(rotationSpeed,10);
+    else {
+        rotationSpeed = parseFloat(rotationSpeed, 10);
     }
     let rotationAxis = event.target.getAttribute("rotationAxis");
-    if (rotationAxis === null){
-        rotationAxis = [0,1,0];
+    if (rotationAxis === null) {
+        rotationAxis = [0, 1, 0];
     }
-    else{
+    else {
         rotationAxis = parseArray(rotationAxis);
     }
     console.log(rotationSpeed);
     console.log(rotationAxis);
-    
+
     const transformNode = scene.getNamedNode("OffTransform");
     // Animation
     const

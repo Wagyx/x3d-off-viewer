@@ -214,11 +214,11 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          scene.addNamedNode("FacesTransform", faceTransform);
          objectTransform.children.push(faceTransform);
          
-         const edgeTransform = this.verticesShape(vertices, offData.verticesColor);
+         const edgeTransform = this.edgesShape(vertices, offData.edges, offData.edgesColor);
          scene.addNamedNode("EdgesTransform", edgeTransform);
          objectTransform.children.push(edgeTransform);
          
-         const vertexTransform = this.edgesShape(vertices, offData.edges, offData.edgesColor);
+         const vertexTransform = this.verticesShape(vertices, offData.verticesColor);
          scene.addNamedNode("VerticesTransform", vertexTransform);
          objectTransform.children.push(vertexTransform);
 
@@ -272,6 +272,17 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const vertexRadius = 0.03;
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
+         
+         // const geometryRef = scene.createNode("Sphere");
+         // scene.addNamedNode("VertexGeometry", geometryRef);
+         // geometryRef.radius = vertexRadius;
+         // groupTransform.children.push(geometryRef);
+         // console.log(geometryRef);
+         
+         // const instShape = scene.createNode("InstancesShape");
+         // instShape.translations = X3D.MFVec3f(vertices);
+         // instShape.geometry=geometryRef;
+         // groupTransform.children.push(shape);
 
          for (let i = 0, l = vertices.length; i < l; ++i) {
             const shape = scene.createNode("Shape");
@@ -285,6 +296,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             shape.appearance = appearance;
 
             const geometry = scene.createNode("Sphere");
+            scene.addNamedNode("VertexGeometry"+i, geometry);
+            // geometry.nodeNamedId = "VertexGeometry";
             geometry.radius = vertexRadius;
             shape.geometry = geometry;
 
