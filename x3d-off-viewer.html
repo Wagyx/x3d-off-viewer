@@ -9,29 +9,16 @@
 
   <style>
     x3d-canvas {
-      width: 45%;
+      width: 100%;
       height: auto;
       aspect-ratio: 1;
     }
   </style>
-  <script>
-    window .addEventListener ("load", function ()
-    {
-      const
-        touchSensor = document .querySelector ("TouchSensor"),
-        hitPoint    = document .querySelector ("#hitPoint");
-    
-      touchSensor .addEventListener ("hitPoint_changed", function (event)
-      {
-        hitPoint .textContent = event .detail .value;
-      });
-    });
-        </script>
 
 </head>
 <body>
-  <x3d-canvas filename="/off/U1.off" vertexRadius="0.1"></x3d-canvas>
-  <x3d-canvas filename="/off/U1.off" edgeRadius="0.05"></x3d-canvas>
+  <!-- <x3d-canvas filename="/off/U1.off" vertexRadius="0.1"></x3d-canvas> -->
+  <!-- <x3d-canvas filename="/off/U1.off" edgeRadius="0.05"></x3d-canvas> -->
   <!-- <x3d-canvas filename="/off/U2.off"></x3d-canvas> -->
   <!-- <x3d-canvas filename="/off/ico_rand.off"></x3d-canvas> -->
   <!-- <x3d-canvas filename="/off/icube.off"></x3d-canvas> -->
@@ -40,9 +27,9 @@
   <!-- <x3d-canvas filename="/off/J91.off"></x3d-canvas> -->
   <!-- <x3d-canvas filename="/off/model3.off"></x3d-canvas> -->
   <!-- <x3d-canvas filename="/off/model3a.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/uc61.off"></x3d-canvas>
-  <x3d-canvas filename="/off/mixed_cols.off"></x3d-canvas> -->
-  <x3d-canvas filename="/off/wincube.off"></x3d-canvas>
+  <x3d-canvas filename="/off/uc61.off"></x3d-canvas>
+  <!-- <x3d-canvas filename="/off/mixed_cols.off"></x3d-canvas> -->
+  <!-- <x3d-canvas filename="/off/wincube.off"></x3d-canvas> -->
   
   </body>
   <script src="/main-x3d.js"></script>

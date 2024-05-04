@@ -307,11 +307,12 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          const appearance = scene.createNode("Appearance");
          const material = scene.createNode("Material");
+         material.diffuseColor = new X3D.SFColor(verticesColor[0][0], verticesColor[0][1], verticesColor[0][2]);
          appearance.material = material;
          shape.appearance = appearance;
 
          const geometry = scene.createNode("Sphere");
-         geometry.radius = 0.1;
+         geometry.radius = 0.03;
          shape.geometry = geometry;
 
          groupTransform.children.push(shape);
@@ -344,6 +345,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          const appearance = scene.createNode("Appearance");
          const material = scene.createNode("Material");
+         material.diffuseColor = new X3D.SFColor(edgesColor[0][0], edgesColor[0][1], edgesColor[0][2]);
          appearance.material = material;
          shape.appearance = appearance;
 
