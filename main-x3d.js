@@ -44,7 +44,7 @@ function createIndexedFaceSet(points, faces, facesColor) {
     const geometry = document.createElement("IndexedFaceSet");
     geometry.setAttribute("solid", "false")
     geometry.setAttribute("convex", "false")
-    geometry.setAttribute("colorPerVertex", false);
+    geometry.setAttribute("colorPerVertex", "false");
     geometry.setAttribute("coordIndex", actualFaces.map(x => x.join(",") + ",-1"
     ).join(","));
 

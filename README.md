@@ -38,6 +38,7 @@ You can also set some other attributes:
 - edgeRadius
 
 ## TODOS
+- fix the issue with transparency and double sided faces
 - an EnvironmentLight
 - better interactions
-- optimizing
+- optimizing (instances)
