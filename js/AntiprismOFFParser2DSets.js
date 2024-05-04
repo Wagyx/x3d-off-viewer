@@ -309,7 +309,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const appearance = scene.createNode("Appearance");
          const material = scene.createNode("Material");
          const pointProps = scene.createNode("PointProperties");
-         pointProps.pointSizeScaleFactor = 5;
+         pointProps.pointSizeScaleFactor = 4;
          pointProps.pointSizeMaxValue = 1000;
          pointProps.attenuation = new X3D.SFVec3f(0, 0.1, 0);
          appearance.pointProperties = pointProps;
@@ -318,16 +318,37 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          const geometry = scene.createNode("PointSet");
          shape.geometry = geometry;
-         const colorNode = scene.createNode("ColorRGBA");
-         const vcol = new X3D.MFColorRGBA();
-         vcol.length = verticesColor.length;
-         for (let i in verticesColor) {
-            vcol[i] = new X3D.SFColorRGBA(verticesColor[i][0], verticesColor[i][1], verticesColor[i][2], verticesColor[i][3]);
-         }
-         colorNode.color = vcol;
          const coordNode = scene.createNode("Coordinate");
          coordNode.point = vertices;
          geometry.coord = coordNode;
+
+         let hasTransparency = false;
+         for (let c of verticesColor) {
+            if (c[3] != 1) {
+               hasTransparency = true;
+               break;
+            }
+         }
+         hasTransparency = true;
+         let colorNode;
+         let colData;
+         if (hasTransparency){
+            colorNode = scene.createNode("ColorRGBA");
+            colData = new X3D.MFColorRGBA();
+            colData.length = verticesColor.length;
+            for (let i in verticesColor) {
+               colData[i] = new X3D.SFColorRGBA(verticesColor[i][0], verticesColor[i][1], verticesColor[i][2], verticesColor[i][3]);
+            }
+         }
+         else{
+            colorNode = scene.createNode("Color");
+            colData = new X3D.MFColor();
+            colData.length = verticesColor.length;
+            for (let i in verticesColor) {
+               colData[i] = new X3D.SFColor(verticesColor[i][0], verticesColor[i][1], verticesColor[i][2]);
+            }
+         }
+         colorNode.color = colData;
          geometry.color = colorNode;
 
          groupTransform.children.push(shape);
@@ -335,60 +356,69 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
       },
 
       edgesShape(vertices, edges, edgesColor) {
-         //TODO
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
+         groupTransform.scale = new X3D.SFVec3f(1.002, 1.002, 1.002);
+         const shape = scene.createNode("Shape");
+         scene.addNamedNode("EdgeShape", shape);
 
-         // const shape = scene.createNode("Shape");
-         // scene.addNamedNode("EdgeShape", shape);
-         // const material = scene.createNode("Material");
-         // // material.diffuseColor = X3D.Color3.White;
-         // const appearance = scene.createNode("Appearance");
-         // appearance.material = material;
-         // shape.appearance = appearance;
+         const appearance = scene.createNode("Appearance");
+         const material = scene.createNode("Material");
+         const props = scene.createNode("LineProperties");
+         props.linewidthScaleFactor = 5;
+         appearance.lineProperties = props;
+         appearance.material = material;
+         shape.appearance = appearance;
 
-         // const geometry = scene.createNode("TriangleSet");
-         // geometry.colorPerVertex = false;
-         // scene.addNamedNode("EdgeGeometry", geometry);
+         const geometry = scene.createNode("LineSet");
+         shape.geometry = geometry;
 
-         // const pts = this.createCylinder(12);
-         // const N = pts.length / 3;
-         // console.log(N);
-         // const colorNode = scene.createNode("ColorRGBA");
-         // const colData = new X3D.MFColorRGBA();
-         // colData.length = edgesColor.length * N;
-         // for (let i = 0, l = edgesColor.length; i < l; ++i) {
-         //    for (let j = 0; j < N; ++j) {
-         //       colData[i * N + j] = new X3D.SFColorRGBA(...edgesColor[i]);
-         //       // colData[i * N + j] = new X3D.SFColor(...edgesColor[i].slice(0,3));
-         //    }
-         // }
-         // const edgeRadius = 0.02;
-         // const coordNode = scene.createNode("Coordinate");
-         // const vertData = new X3D.MFVec3f();
-         // vertData.length = edges.length * 3 * N;
-         // const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
-         // for (let i = 0, l = edges.length; i < l; ++i) {
-         //    const e = edges[i];
-         //    const pt0 = vertices[e[0]];
-         //    const pt1 = vertices[e[1]];
-         //    const mid = pt0.lerp(pt1, 0.5);
-         //    const direction = pt1.subtract(pt0);
-         //    const dirLength = direction.length();
-         //    const rot = new X3D.SFRotation(cylDir, direction);
-         //    const scale = new X3D.SFVec3f(edgeRadius, dirLength, edgeRadius);
-         //    for (let j = 0; j < 3 * N; ++j) {
-         //       vertData[i * 3 * N + j] = rot.multVec(pts[j].multVec(scale)).add(mid);
-         //    }
-         // }
+         const vertexCount = [];
+         const vertData = new X3D.MFVec3f();
+         vertData.length = 2 * edges.length;
+         for (let i in edges) {
+            vertData[2 * i] = vertices[edges[i][0]];
+            vertData[2 * i + 1] = vertices[edges[i][1]];
+            vertexCount.push(2);
+         }
+         geometry.vertexCount = vertexCount;
+         const coordNode = scene.createNode("Coordinate");
+         coordNode.point = vertData;
+         geometry.coord = coordNode;
 
-         // colorNode.color = colData;
-         // geometry.color = colorNode;
-         // coordNode.point = vertData;
-         // geometry.coord = coordNode;
+         let hasTransparency = false;
+         for (let c of edgesColor) {
+            if (c[3] != 1) {
+               hasTransparency = true;
+               break;
+            }
+         }
+         
+         hasTransparency = true;
+         let colorNode;
+         let colData;
+         if (hasTransparency) {
+            colorNode = scene.createNode("ColorRGBA");
+            colData = new X3D.MFColorRGBA();
+            colData.length = edgesColor.length*2;
+            for (let i in edgesColor) {
+               colData[2*i] = new X3D.SFColorRGBA(edgesColor[i][0], edgesColor[i][1], edgesColor[i][2], edgesColor[i][3]);
+               colData[2*i+1] = new X3D.SFColorRGBA(edgesColor[i][0], edgesColor[i][1], edgesColor[i][2], edgesColor[i][3]);
+            }
+         }
+         else {
+            colorNode = scene.createNode("Color");
+            colData = new X3D.MFColor();
+            colData.length = edgesColor.length*2;
+            for (let i in edgesColor) {
+               colData[2*i] = new X3D.SFColor(edgesColor[i][0], edgesColor[i][1], edgesColor[i][2]);
+               colData[2*i+1] = new X3D.SFColor(edgesColor[i][0], edgesColor[i][1], edgesColor[i][2]);
+            }
+         }
+         colorNode.color = colData;
+         geometry.color = colorNode;
 
-         // shape.geometry = geometry;
-         // groupTransform.children.push(shape);
+         groupTransform.children.push(shape);
 
          return groupTransform;
       },
