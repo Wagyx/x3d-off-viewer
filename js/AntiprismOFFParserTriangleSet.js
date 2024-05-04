@@ -301,30 +301,46 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
 
-         const geometry = scene.createNode("Sphere");
+         const shape = scene.createNode("Shape");
+         scene.addNamedNode("VertexShape", shape);
+         const material = scene.createNode("Material");
+         // material.diffuseColor = X3D.Color3.White;
+         const appearance = scene.createNode("Appearance");
+         appearance.material = material;
+         shape.appearance = appearance;
+
+         const geometry = scene.createNode("TriangleSet");
+         geometry.colorPerVertex = false;
          scene.addNamedNode("VertexGeometry", geometry);
-         geometry.radius = 0.03;
 
-
-         for (let i = 0, l = vertices.length; i < l; ++i) {
-            const shape = scene.createNode("Shape");
-            shape.geometry = geometry;
-
-            const color = verticesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            shape.appearance = appearance;
-
-            const transform = scene.createNode("Transform");
-            const point = vertices[i];
-            transform.translation = point;
-            transform.children.push(shape);
-
-            groupTransform.children.push(transform);
+         const icoPts = this.createIcoSphere(2);
+         const N = icoPts.length / 3;
+         console.log(N);
+         const colorNode = scene.createNode("ColorRGBA");
+         const colData = new X3D.MFColorRGBA();
+         colData.length = verticesColor.length * N;
+         for (let i = 0, l = verticesColor.length; i < l; ++i) {
+            for (let j = 0; j < N; ++j) {
+               colData[i * N + j] = new X3D.SFColorRGBA(...verticesColor[i]);
+            }
          }
+         const vertexRadius = 0.03;
+         const coordNode = scene.createNode("Coordinate");
+         const vertData = new X3D.MFVec3f();
+         vertData.length = vertices.length * 3 * N;
+         for (let i = 0, l = vertices.length; i < l; ++i) {
+            for (let j = 0; j < 3 * N; ++j) {
+               vertData[i * 3 * N + j] = vertices[i].add(icoPts[j].multiply(vertexRadius));
+            }
+         }
+         colorNode.color = colData;
+         geometry.color = colorNode;
+         coordNode.point = vertData;
+         geometry.coord = coordNode;
+
+         shape.geometry = geometry;
+         groupTransform.children.push(shape);
+
          return groupTransform;
       },
 
@@ -332,11 +348,34 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
 
-         const geometry = scene.createNode("Cylinder");
-         scene.addNamedNode("EdgeGeometry", geometry);
-         geometry.radius = 0.02;
-         geometry.height = 1;
+         const shape = scene.createNode("Shape");
+         scene.addNamedNode("EdgeShape", shape);
+         const material = scene.createNode("Material");
+         // material.diffuseColor = X3D.Color3.White;
+         const appearance = scene.createNode("Appearance");
+         appearance.material = material;
+         shape.appearance = appearance;
 
+         const geometry = scene.createNode("TriangleSet");
+         geometry.colorPerVertex = false;
+         scene.addNamedNode("EdgeGeometry", geometry);
+
+         const pts = this.createCylinder(12);
+         const N = pts.length / 3;
+         console.log(N);
+         const colorNode = scene.createNode("ColorRGBA");
+         const colData = new X3D.MFColorRGBA();
+         colData.length = edgesColor.length * N;
+         for (let i = 0, l = edgesColor.length; i < l; ++i) {
+            for (let j = 0; j < N; ++j) {
+               colData[i * N + j] = new X3D.SFColorRGBA(...edgesColor[i]);
+               // colData[i * N + j] = new X3D.SFColor(...edgesColor[i].slice(0,3));
+            }
+         }
+         const edgeRadius = 0.02;
+         const coordNode = scene.createNode("Coordinate");
+         const vertData = new X3D.MFVec3f();
+         vertData.length = edges.length * 3 * N;
          const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
          for (let i = 0, l = edges.length; i < l; ++i) {
             const e = edges[i];
@@ -346,25 +385,20 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             const direction = pt1.subtract(pt0);
             const dirLength = direction.length();
             const rot = new X3D.SFRotation(cylDir, direction);
-
-            const transform = scene.createNode("Transform");
-            transform.translation = mid;
-            transform.rotation = rot;
-            transform.scale = new X3D.SFVec3f(1, dirLength, 1);
-
-            const color = edgesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            const shape = scene.createNode("Shape");
-            shape.appearance = appearance;
-
-            shape.geometry = geometry;
-            transform.children.push(shape);
-            groupTransform.children.push(transform);
+            const scale = new X3D.SFVec3f(edgeRadius, dirLength, edgeRadius);
+            for (let j = 0; j < 3 * N; ++j) {
+               vertData[i * 3 * N + j] = rot.multVec(pts[j].multVec(scale)).add(mid);
+            }
          }
+
+         colorNode.color = colData;
+         geometry.color = colorNode;
+         coordNode.point = vertData;
+         geometry.coord = coordNode;
+
+         shape.geometry = geometry;
+         groupTransform.children.push(shape);
+
          return groupTransform;
       },
 
@@ -402,6 +436,109 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          return obj;
       },
 
+      createIcoSphere(level) {
+         let vertices = [
+            [0.5, 0.0, 0.809016994374947424102293417183],
+            [0.5, 0.0, -0.809016994374947424102293417183],
+            [-0.5, 0.0, 0.809016994374947424102293417183],
+            [-0.5, 0.0, -0.809016994374947424102293417183],
+            [0.809016994374947424102293417183, 0.5, 0.0],
+            [0.809016994374947424102293417183, -0.5, 0.0],
+            [-0.809016994374947424102293417183, 0.5, 0.0],
+            [-0.809016994374947424102293417183, -0.5, 0.0],
+            [0.0, 0.809016994374947424102293417183, 0.5],
+            [0.0, 0.809016994374947424102293417183, -0.5],
+            [0.0, -0.809016994374947424102293417183, 0.5],
+            [0.0, -0.809016994374947424102293417183, -0.5]
+         ];
+         vertices = vertices.map(x => new X3D.SFVec3f(...x).normalize());
+
+         let faces = [
+            [1, 3, 11],
+            [1, 11, 6],
+            [1, 6, 5],
+            [1, 5, 9],
+            [1, 9, 3],
+            [4, 2, 12],
+            [4, 12, 8],
+            [4, 8, 7],
+            [4, 7, 10],
+            [4, 10, 2],
+            [3, 7, 8],
+            [3, 8, 11],
+            [11, 8, 12],
+            [11, 12, 6],
+            [6, 12, 2],
+            [6, 2, 5],
+            [5, 2, 10],
+            [5, 10, 9],
+            [9, 10, 7],
+            [9, 7, 3]
+         ];
+         faces = faces.map(x => x.map(el => el - 1));
+
+
+         // let edges = [];
+         // for (let f of faces) {
+
+         // }
+
+         // tessselate sphere
+         for (let l = 0; l < level; ++l) {
+            const newFaces = [];
+            for (let f of faces) {
+               const mid01 = vertices[f[0]].add(vertices[f[1]]).divide(2).normalize();
+               const mid12 = vertices[f[1]].add(vertices[f[2]]).divide(2).normalize();
+               const mid20 = vertices[f[2]].add(vertices[f[0]]).divide(2).normalize();
+               newFaces.push([f[0], vertices.length, vertices.length + 2]);
+               newFaces.push([f[1], vertices.length + 1, vertices.length]);
+               newFaces.push([f[2], vertices.length + 2, vertices.length + 1]);
+               newFaces.push([vertices.length, vertices.length + 1, vertices.length + 2]);
+               vertices.push(mid01);
+               vertices.push(mid12);
+               vertices.push(mid20);
+            }
+            faces = newFaces;
+         }
+
+         const res = [];
+         for (let f of faces) {
+            res.push(vertices[f[0]]);
+            res.push(vertices[f[1]]);
+            res.push(vertices[f[2]]);
+         }
+         return res;
+      },
+      createCylinder(N) {
+         const radius = 1;
+         const height = 1;
+         const vertices = [];
+         vertices.push(new X3D.SFVec3f(0, -height / 2, 0));
+         const faces = [];
+         for (let i = 0; i < N; ++i) {
+            const angle = 2 * Math.PI * i / N;
+            vertices.push(new X3D.SFVec3f(radius * Math.cos(angle), -height / 2, radius * Math.sin(angle)));
+            faces.push([0, i + 1, (i + 1) % N + 1]);
+         }
+         vertices.push(new X3D.SFVec3f(0, height / 2, 0));
+         for (let i = 0; i < N; ++i) {
+            const angle = 2 * Math.PI * i / N;
+            vertices.push(new X3D.SFVec3f(radius * Math.cos(angle), height / 2, radius * Math.sin(angle)));
+            faces.push([N + 1, (i + 1) % N + 1 + N + 1, i + 1 + N + 1]);
+         }
+
+         for (let i = 0; i < N; ++i) {
+            faces.push([i + 1, (i + 1) % N + 1 + N + 1, (i + 1) % N + 1]);
+            faces.push([i + 1, i + 1 + N + 1, (i + 1) % N + 1 + N + 1]);
+         }
+         const res = [];
+         for (let f of faces) {
+            res.push(vertices[f[0]]);
+            res.push(vertices[f[1]]);
+            res.push(vertices[f[2]]);
+         }
+         return res;
+      }
    });
 
 X3D.GoldenGate.Parser.push(OFFParser);

@@ -82,9 +82,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             vertices: [],
             faces: [],
             edges: [],
-            verticesColor: [],
             facesColor: [],
-            edgesColor: [],
          };
          const headerKeyword = lines[0].trimStart();
          if (!headerKeyword == "OFF") {
@@ -114,7 +112,6 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             if (lineFirstChar === '#') continue;
             const data = line.split(_face_vertex_data_separator_pattern);
             result.vertices.push(data.slice(0, 3).map(el => parseFloat(el, 10)));
-            result.verticesColor.push(undefined);
             if (result.vertices.length >= numberVertices) {
                i++;
                break;
@@ -134,50 +131,6 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
                result.faces.push(lineData.slice(1, faceNum + 1).map(el => parseFloat(el, 10)));
                result.facesColor.push((lineData.length > faceNum + 1) ? this.parseColor(lineData.slice(faceNum + 1)) : undefined);
             }
-            else if (faceNum == 2) {
-               const i0 = parseFloat(lineData[1], 10);
-               const i1 = parseFloat(lineData[2], 10);
-               let edge;
-               if (i0 > i1) {
-                  edge = "" + i1 + "," + i0;
-               }
-               else {
-                  edge = "" + i0 + "," + i1;
-               }
-               result.edges.push(edge);
-               result.edgesColor.push((lineData.length > faceNum + 1) ? this.parseColor(lineData.slice(faceNum + 1)) : undefined);
-            }
-            else if (faceNum == 1) {
-               if (lineData.length > faceNum + 1) {
-                  result.verticesColor[parseInt(lineData.slice(1, 2), 10)] = this.parseColor(lineData.slice(faceNum + 1));
-               }
-            }
-         }
-
-
-         // add misssing edges
-         for (let face of result.faces) {
-            for (let j = 0, jl = face.length; j < jl; j++) {
-               const i0 = face[j];
-               const i1 = face[(j + 1) % jl];
-               let edge;
-               if (i0 > i1) {
-                  edge = "" + i1 + "," + i0;
-               }
-               else {
-                  edge = "" + i0 + "," + i1;
-               }
-               if (!result.edges.includes(edge)) {
-                  result.edges.push(edge);
-                  result.edgesColor.push(undefined);
-               }
-            }
-         }
-
-
-         for (let i = 0, l = result.edges.length; i < l; ++i) {
-            const edgeParts = result.edges[i].split(',');
-            result.edges[i] = [parseInt(edgeParts[0], 10), parseInt(edgeParts[1], 10)]
          }
          return result;
       },
@@ -186,50 +139,17 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const offData = this.textToPrimaries();
          this.addMissingColors(offData);
 
-         // convert vertex data to THREE.js vectors
+         // convert vertex data to vectors
          const vertices = new X3D.MFVec3f();
          vertices.length = offData.vertices.length;
-         let cnt = new X3D.SFVec3f(0, 0, 0);
          for (let i = 0, l = offData.vertices.length; i < l; ++i) {
             vertices[i] = new X3D.SFVec3f(...offData.vertices[i])
-            cnt = cnt.add(vertices[i]);
-         }
-         cnt = cnt.divide(vertices.length);
-         //center in zero
-         const edgesLength = [];
-         for (let i = 0, l = vertices.length; i < l; i++) {
-            vertices[i] = vertices[i].subtract(cnt);
-            edgesLength.push(vertices[i].length());
-         }
-         const polyScaleFactor = 10 / Math.max.apply(Math, edgesLength);
-         edgesLength.length = 0;
-         // compute edges length to normalize edge length
-         for (let e of offData.edges) {
-            edgesLength.push((vertices[e[1]].subtract(vertices[e[0]])).length());
-         }
-         const scaleFactor = edgesLength.reduce((partialSum, a) => partialSum + a, 0) / edgesLength.length;
-         // console.log(Math.min.apply(Math, edgesLength));
-         // console.log(Math.max.apply(Math, edgesLength));
-         for (let i = 0, l = vertices.length; i < l; i++) {
-            vertices[i] = vertices[i].divide(scaleFactor);
          }
 
          // FACES
          const scene = this.getExecutionContext();
-         const objectTransform = scene.createNode("Transform");
+         const objectTransform = this.facesShape(vertices, offData.faces, offData.facesColor);
          scene.addNamedNode("OffTransform", objectTransform);
-
-         const faceTransform = this.facesShape(vertices, offData.faces, offData.facesColor);
-         scene.addNamedNode("FacesTransform", faceTransform);
-         objectTransform.children.push(faceTransform);
-
-         const edgeTransform = this.edgesShape(vertices, offData.edges, offData.edgesColor);
-         scene.addNamedNode("EdgesTransform", edgeTransform);
-         objectTransform.children.push(edgeTransform);
-
-         const vertexTransform = this.verticesShape(vertices, offData.verticesColor);
-         scene.addNamedNode("VerticesTransform", vertexTransform);
-         objectTransform.children.push(vertexTransform);
 
          return objectTransform;
       },
@@ -256,6 +176,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
                hasTransparency = true;
             }
          }
+         console.log(facesColor);
+         console.log(hasTransparency);
          let colorNode, colData;
          if (hasTransparency) {
             colorNode = scene.createNode("ColorRGBA");
@@ -297,77 +219,6 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          return transform;
       },
 
-      verticesShape(vertices, verticesColor) {
-         const scene = this.getExecutionContext();
-         const groupTransform = scene.createNode("Transform");
-
-         const geometry = scene.createNode("Sphere");
-         scene.addNamedNode("VertexGeometry", geometry);
-         geometry.radius = 0.03;
-
-
-         for (let i = 0, l = vertices.length; i < l; ++i) {
-            const shape = scene.createNode("Shape");
-            shape.geometry = geometry;
-
-            const color = verticesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            shape.appearance = appearance;
-
-            const transform = scene.createNode("Transform");
-            const point = vertices[i];
-            transform.translation = point;
-            transform.children.push(shape);
-
-            groupTransform.children.push(transform);
-         }
-         return groupTransform;
-      },
-
-      edgesShape(vertices, edges, edgesColor) {
-         const scene = this.getExecutionContext();
-         const groupTransform = scene.createNode("Transform");
-
-         const geometry = scene.createNode("Cylinder");
-         scene.addNamedNode("EdgeGeometry", geometry);
-         geometry.radius = 0.02;
-         geometry.height = 1;
-
-         const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
-         for (let i = 0, l = edges.length; i < l; ++i) {
-            const e = edges[i];
-            const pt0 = vertices[e[0]];
-            const pt1 = vertices[e[1]];
-            const mid = pt0.lerp(pt1, 0.5);
-            const direction = pt1.subtract(pt0);
-            const dirLength = direction.length();
-            const rot = new X3D.SFRotation(cylDir, direction);
-
-            const transform = scene.createNode("Transform");
-            transform.translation = mid;
-            transform.rotation = rot;
-            transform.scale = new X3D.SFVec3f(1, dirLength, 1);
-
-            const color = edgesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            const shape = scene.createNode("Shape");
-            shape.appearance = appearance;
-
-            shape.geometry = geometry;
-            transform.children.push(shape);
-            groupTransform.children.push(transform);
-         }
-         return groupTransform;
-      },
-
       parseColor(colorStringArray) {
          let isFloat = false;
          for (let el of colorStringArray) {
@@ -381,26 +232,14 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
       },
 
       addMissingColors(obj) {
-         // const gDefaultColor = { vertex: [1.0, 0.5, 0.0], edge: [0.8, 0.6, 0.8], face: [0.8, 0.9, 0.9] };
-         const gDefaultColor = { vertex: [1.0, 0.5, 0.0, 1.0], edge: [0.8, 0.6, 0.8, 1.0], face: [0.8, 0.9, 0.9, 1.0] };
-
-         for (let i = 0, l = obj.verticesColor.length; i < l; ++i) {
-            if (obj.verticesColor[i] === undefined) {
-               obj.verticesColor[i] = gDefaultColor.vertex;
-            }
-         }
-         for (let i = 0, l = obj.edgesColor.length; i < l; ++i) {
-            if (obj.edgesColor[i] === undefined) {
-               obj.edgesColor[i] = gDefaultColor.edge;
-            }
-         }
+         const gDefaultColor = [1.0, 1.0, 1.0, 1.0];
          for (let i = 0, l = obj.facesColor.length; i < l; ++i) {
             if (obj.facesColor[i] === undefined) {
-               obj.facesColor[i] = gDefaultColor.face;
+               obj.facesColor[i] = gDefaultColor;
             }
          }
          return obj;
-      },
+      }
 
    });
 

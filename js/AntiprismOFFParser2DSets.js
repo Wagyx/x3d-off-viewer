@@ -228,6 +228,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          objectTransform.children.push(edgeTransform);
 
          const vertexTransform = this.verticesShape(vertices, offData.verticesColor);
+         // const vertexTransform = this.verticesShapePointSet(vertices, offData.verticesColor);
+         // const vertexTransform = this.verticesShapeInstance(vertices, offData.verticesColor);
          scene.addNamedNode("VerticesTransform", vertexTransform);
          objectTransform.children.push(vertexTransform);
 
@@ -300,71 +302,94 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
       verticesShape(vertices, verticesColor) {
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
+         groupTransform.scale = new X3D.SFVec3f(1.002, 1.002, 1.002);
+         const shape = scene.createNode("Shape");
+         scene.addNamedNode("VertexShape", shape);
 
-         const geometry = scene.createNode("Sphere");
-         scene.addNamedNode("VertexGeometry", geometry);
-         geometry.radius = 0.03;
+         const appearance = scene.createNode("Appearance");
+         const material = scene.createNode("Material");
+         const pointProps = scene.createNode("PointProperties");
+         pointProps.pointSizeScaleFactor = 5;
+         pointProps.pointSizeMaxValue = 1000;
+         pointProps.attenuation = new X3D.SFVec3f(0, 0.1, 0);
+         appearance.pointProperties = pointProps;
+         appearance.material = material;
+         shape.appearance = appearance;
 
-
-         for (let i = 0, l = vertices.length; i < l; ++i) {
-            const shape = scene.createNode("Shape");
-            shape.geometry = geometry;
-
-            const color = verticesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            shape.appearance = appearance;
-
-            const transform = scene.createNode("Transform");
-            const point = vertices[i];
-            transform.translation = point;
-            transform.children.push(shape);
-
-            groupTransform.children.push(transform);
+         const geometry = scene.createNode("PointSet");
+         shape.geometry = geometry;
+         const colorNode = scene.createNode("ColorRGBA");
+         const vcol = new X3D.MFColorRGBA();
+         vcol.length = verticesColor.length;
+         for (let i in verticesColor) {
+            vcol[i] = new X3D.SFColorRGBA(verticesColor[i][0], verticesColor[i][1], verticesColor[i][2], verticesColor[i][3]);
          }
+         colorNode.color = vcol;
+         const coordNode = scene.createNode("Coordinate");
+         coordNode.point = vertices;
+         geometry.coord = coordNode;
+         geometry.color = colorNode;
+
+         groupTransform.children.push(shape);
          return groupTransform;
       },
 
       edgesShape(vertices, edges, edgesColor) {
+         //TODO
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
 
-         const geometry = scene.createNode("Cylinder");
-         scene.addNamedNode("EdgeGeometry", geometry);
-         geometry.radius = 0.02;
-         geometry.height = 1;
+         // const shape = scene.createNode("Shape");
+         // scene.addNamedNode("EdgeShape", shape);
+         // const material = scene.createNode("Material");
+         // // material.diffuseColor = X3D.Color3.White;
+         // const appearance = scene.createNode("Appearance");
+         // appearance.material = material;
+         // shape.appearance = appearance;
 
-         const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
-         for (let i = 0, l = edges.length; i < l; ++i) {
-            const e = edges[i];
-            const pt0 = vertices[e[0]];
-            const pt1 = vertices[e[1]];
-            const mid = pt0.lerp(pt1, 0.5);
-            const direction = pt1.subtract(pt0);
-            const dirLength = direction.length();
-            const rot = new X3D.SFRotation(cylDir, direction);
+         // const geometry = scene.createNode("TriangleSet");
+         // geometry.colorPerVertex = false;
+         // scene.addNamedNode("EdgeGeometry", geometry);
 
-            const transform = scene.createNode("Transform");
-            transform.translation = mid;
-            transform.rotation = rot;
-            transform.scale = new X3D.SFVec3f(1, dirLength, 1);
+         // const pts = this.createCylinder(12);
+         // const N = pts.length / 3;
+         // console.log(N);
+         // const colorNode = scene.createNode("ColorRGBA");
+         // const colData = new X3D.MFColorRGBA();
+         // colData.length = edgesColor.length * N;
+         // for (let i = 0, l = edgesColor.length; i < l; ++i) {
+         //    for (let j = 0; j < N; ++j) {
+         //       colData[i * N + j] = new X3D.SFColorRGBA(...edgesColor[i]);
+         //       // colData[i * N + j] = new X3D.SFColor(...edgesColor[i].slice(0,3));
+         //    }
+         // }
+         // const edgeRadius = 0.02;
+         // const coordNode = scene.createNode("Coordinate");
+         // const vertData = new X3D.MFVec3f();
+         // vertData.length = edges.length * 3 * N;
+         // const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
+         // for (let i = 0, l = edges.length; i < l; ++i) {
+         //    const e = edges[i];
+         //    const pt0 = vertices[e[0]];
+         //    const pt1 = vertices[e[1]];
+         //    const mid = pt0.lerp(pt1, 0.5);
+         //    const direction = pt1.subtract(pt0);
+         //    const dirLength = direction.length();
+         //    const rot = new X3D.SFRotation(cylDir, direction);
+         //    const scale = new X3D.SFVec3f(edgeRadius, dirLength, edgeRadius);
+         //    for (let j = 0; j < 3 * N; ++j) {
+         //       vertData[i * 3 * N + j] = rot.multVec(pts[j].multVec(scale)).add(mid);
+         //    }
+         // }
 
-            const color = edgesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            const shape = scene.createNode("Shape");
-            shape.appearance = appearance;
+         // colorNode.color = colData;
+         // geometry.color = colorNode;
+         // coordNode.point = vertData;
+         // geometry.coord = coordNode;
 
-            shape.geometry = geometry;
-            transform.children.push(shape);
-            groupTransform.children.push(transform);
-         }
+         // shape.geometry = geometry;
+         // groupTransform.children.push(shape);
+
          return groupTransform;
       },
 
@@ -400,7 +425,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             }
          }
          return obj;
-      },
+      }
 
    });
 

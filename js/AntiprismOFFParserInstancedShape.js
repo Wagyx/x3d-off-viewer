@@ -42,6 +42,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          scene.setEncoding("OFF");
          scene.setProfile(browser.getProfile("Interchange"));
+         scene.addComponent(browser.getComponent("X_ITE", 1));
 
          await this.loadComponents();
 
@@ -300,71 +301,60 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
       verticesShape(vertices, verticesColor) {
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
+         const shape = scene.createNode("InstancedShape");
+         shape.translations = vertices
+         scene.addNamedNode("VertexShape", shape);
+
+         const appearance = scene.createNode("Appearance");
+         const material = scene.createNode("Material");
+         appearance.material = material;
+         shape.appearance = appearance;
 
          const geometry = scene.createNode("Sphere");
-         scene.addNamedNode("VertexGeometry", geometry);
-         geometry.radius = 0.03;
+         geometry.radius = 0.1;
+         shape.geometry = geometry;
 
-
-         for (let i = 0, l = vertices.length; i < l; ++i) {
-            const shape = scene.createNode("Shape");
-            shape.geometry = geometry;
-
-            const color = verticesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            shape.appearance = appearance;
-
-            const transform = scene.createNode("Transform");
-            const point = vertices[i];
-            transform.translation = point;
-            transform.children.push(shape);
-
-            groupTransform.children.push(transform);
-         }
+         groupTransform.children.push(shape);
          return groupTransform;
       },
 
       edgesShape(vertices, edges, edgesColor) {
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
-
-         const geometry = scene.createNode("Cylinder");
-         scene.addNamedNode("EdgeGeometry", geometry);
-         geometry.radius = 0.02;
-         geometry.height = 1;
+         const shape = scene.createNode("InstancedShape");
+         scene.addNamedNode("EdgeShape", shape);
+         shape.translations = new X3D.MFVec3f();
+         shape.rotations = new X3D.MFRotation();
+         shape.scales = new X3D.MFVec3f();
+         shape.translations.length = edges.length;
+         shape.rotations.length = edges.length;
+         shape.scales.length = edges.length;
 
          const cylDir = new X3D.SFVec3f(0, 1, 0); // the cylinder direction
          for (let i = 0, l = edges.length; i < l; ++i) {
             const e = edges[i];
             const pt0 = vertices[e[0]];
             const pt1 = vertices[e[1]];
-            const mid = pt0.lerp(pt1, 0.5);
+            shape.translations[i] = pt0.lerp(pt1, 0.5);
             const direction = pt1.subtract(pt0);
             const dirLength = direction.length();
-            const rot = new X3D.SFRotation(cylDir, direction);
-
-            const transform = scene.createNode("Transform");
-            transform.translation = mid;
-            transform.rotation = rot;
-            transform.scale = new X3D.SFVec3f(1, dirLength, 1);
-
-            const color = edgesColor[i];
-            const material = scene.createNode("Material");
-            material.diffuseColor = new X3D.SFColor(color[0], color[1], color[2]);
-            material.transparency = 1 - color[3];
-            const appearance = scene.createNode("Appearance");
-            appearance.material = material;
-            const shape = scene.createNode("Shape");
-            shape.appearance = appearance;
-
-            shape.geometry = geometry;
-            transform.children.push(shape);
-            groupTransform.children.push(transform);
+            shape.rotations[i] = new X3D.SFRotation(cylDir, direction);
+            shape.scales[i] = new X3D.SFVec3f(1, dirLength, 1);
          }
+
+         const appearance = scene.createNode("Appearance");
+         const material = scene.createNode("Material");
+         appearance.material = material;
+         shape.appearance = appearance;
+
+         const geometry = scene.createNode("Cylinder");
+         scene.addNamedNode("EdgeGeometry", geometry);
+         geometry.radius = 0.02;
+         geometry.height = 1;
+         shape.geometry = geometry;
+
+         groupTransform.children.push(shape);
+
          return groupTransform;
       },
 
@@ -400,8 +390,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
             }
          }
          return obj;
-      },
-
+      }
    });
 
 X3D.GoldenGate.Parser.push(OFFParser);
