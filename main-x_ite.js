@@ -258,7 +258,7 @@ function modifyOff(event) {
     // console.log(event.target);
     // console.log("browser " + xBrowser.toXMLString());
 
-    // choose this in accordance with the Parser
+    // *IMPORTANT* : choose this in accordance with the Parser
     modifySceneTooManyShapes(scene, parameters);
     // modifySceneInstancedShape(scene, parameters);
     // modifySceneTriangleSet(scene, parameters);
