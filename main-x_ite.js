@@ -11,7 +11,7 @@ function init() {
     // }
     // scene.components.push("X_ITE");
 
-    const comp = xBrowser.getComponent ("X_ITE", 1);
+    const comp = xBrowser.getComponent("X_ITE", 1);
     scene.addComponent(comp);
 
     // scene.createNode("ComponentInfoArray");
@@ -29,14 +29,14 @@ function init() {
     // const transformLight = scene.createNode("Transform");
     // transformLight.translation = new X3D.SFVec3f(0,0,0);
     const envLight = scene.createNode("PointLight");
-    envLight.color = new X3D.SFColor(0,1,0);
+    envLight.color = new X3D.SFColor(0, 1, 0);
     envLight.intensity = 0.00001;
     envLight.ambientIntensity = 1;
-    envLight.attenuation = new X3D.SFVec3f(0,0,0);
+    envLight.attenuation = new X3D.SFVec3f(0, 0, 0);
     // envLight.global = true;
     // transformLight.children.push(envLight)
     scene.rootNodes.push(envLight);
-    
+
     // const inline = scene.createNode("Inline");
     // inline.url = ["/dump/simpleInst.x3d",];
     // scene.rootNodes.push(inline);
@@ -49,10 +49,10 @@ function init() {
     const shape = scene.createNode("Shape");
     const geom = scene.createNode("Box");
     shape.geometry = geom;
-    
+
     // const protoDeclare = scene.createNode("ProtoDeclare");
     // const protoBody = scene.createNode("ProtoBody");
-    
+
     const appearance = scene.createNode("Appearance");
     const material = scene.createNode("Material");
     material.diffuseColor = new X3D.SFColor(0.5, 0.5, 0.5);
@@ -62,7 +62,7 @@ function init() {
     scene.rootNodes.push(shape); // rootNodes is a MFNode field.
 
     console.log("browser " + xBrowser.toXMLString());
-    
+
     const instShape = scene.createNode("InstancedShape");
 }
 
@@ -70,53 +70,86 @@ function parseColor(colString) {
     return colString.split(",").map(x => parseFloat(x, 10) / 255.0);
 }
 
+function parseHexColor(colorHexString) {
+    return [
+        parseInt(Number("0x" + colorHexString.slice(0, 2)), 10)/255.0,
+        parseInt(Number("0x" + colorHexString.slice(2, 4)), 10)/255.0,
+        parseInt(Number("0x" + colorHexString.slice(4, 6)), 10)/255.0
+    ];
+}
+
 function parseArray(arrString) {
     return arrString.split(",").map(x => parseFloat(x, 10) / 255.0);
+}
+
+function modifySceneTooManyShapes(scene, parameters) {
+    if (parameters.vertexRadius !== null) {
+        const geom = scene.getNamedNode("VertexGeometry");
+        geom.radius = parseFloat(parameters.vertexRadius, 10);
+    }
+
+    if (parameters.edgeRadius !== null) {
+        const geom = scene.getNamedNode("EdgeGeometry");
+        geom.radius = parseFloat(parameters.edgeRadius, 10);
+    }
+
+    if (parameters.faceColor!== null) {
+        const color = new X3D.SFColor(...parseHexColor(parameters.faceColor));
+        const geom = scene.getNamedNode("FacesTransform").children[0].geometry;
+        geom.color.color = new X3D.MFColor(color);
+    }
+
+    if (parameters.edgeColor !== null) {
+        const color = new X3D.SFColor(...parseHexColor(parameters.edgeColor));
+        for (let el of scene.getNamedNode("EdgesTransform").children){
+            el.children[0].appearance.material.diffuseColor = color;
+        }
+    }
+
+    if (parameters.vertexColor !== null) {
+        const color = new X3D.SFColor(...parseHexColor(parameters.vertexColor));
+        for (let el of scene.getNamedNode("VerticesTransform").children){
+            el.children[0].appearance.material.diffuseColor = color;
+        }
+    }
 }
 
 function modifyOff(event) {
     const xBrowser = X3D.getBrowser(event.target);
     const scene = xBrowser.currentScene;
+
+    const parameters={
+        vertexRadius:event.target.getAttribute("vertexRadius"),
+        edgeRadius:event.target.getAttribute("edgeRadius"),
+        backgroundColor:event.target.getAttribute("backgroundColor"),
+        rotationSpeed:event.target.getAttribute("rotationSpeed"),
+        rotationAxis:event.target.getAttribute("rotationAxis"),
+        vertexColor:event.target.getAttribute("vertexColor"),
+        edgeColor:event.target.getAttribute("edgeColor"),
+        faceColor:event.target.getAttribute("faceColor"),
+    }
+
+
     // console.log(event.target);
     // console.log("browser " + xBrowser.toXMLString());
 
-    // const envLight = scene.createNode("EnvironmentLight");
-    // envLight.color = new X3D.SFColor(0,1,1);
-    // envLight.intensity = 100;
-    // envLight.ambientIntensity = 100;
-    // envLight.global = true;
-    // scene.rootNodes.splice(0,0,envLight);
+    modifySceneTooManyShapes(scene,parameters);
 
-    // const vertexRadius = event.target.getAttribute("vertexRadius");
-    // if (vertexRadius !== null) {
-    //     const geom = scene.getNamedNode("VertexGeometry");
-    //     geom.radius = parseFloat(vertexRadius, 10);
-    // }
-
-    // const edgeRadius = event.target.getAttribute("edgeRadius");
-    // if (edgeRadius !== null) {
-    //     const geom = scene.getNamedNode("EdgeGeometry");
-    //     geom.radius = parseFloat(edgeRadius, 10);
-    // }
-
-    const backgroundColor = event.target.getAttribute("backgroundColor");
-    if (backgroundColor !== null) {
+    // Background
+    if (parameters.backgroundColor !== null) {
         const background = scene.getNamedNode("Background");
-        background.skyColor = new X3D.MFColor(new X3D.SFColor(...parseColor(backgroundColor)));
+        background.skyColor = new X3D.MFColor(new X3D.SFColor(...parseHexColor(parameters.backgroundColor)));
     }
 
     // Animation
     const transformNode = scene.getNamedNode("OffTransform");
-
-    let rotationSpeed = event.target.getAttribute("rotationSpeed");
-    rotationSpeed = rotationSpeed !== null ? parseFloat(rotationSpeed, 10) : 0;
-    let rotationAxis = event.target.getAttribute("rotationAxis");
-    rotationAxis = rotationAxis !== null ? parseArray(rotationAxis) : [0, 1, 0];
+    const rotationSpeed = parameters.rotationSpeed !== null ? parseFloat(parameters.rotationSpeed, 10) : 0;
+    const rotationAxis = parameters.rotationAxis !== null ? parseArray(parameters.rotationAxis) : [0, 1, 0];
 
     const timeSensorNode = scene.createNode("TimeSensor");
     timeSensorNode.cycleInterval = 2 * Math.PI / rotationSpeed;
     timeSensorNode.loop = true;
-    
+
     const interpolatorNode = scene.createNode("OrientationInterpolator");
     for (let i = 0; i < 5; ++i) {
         interpolatorNode.key[i] = i / 4;
