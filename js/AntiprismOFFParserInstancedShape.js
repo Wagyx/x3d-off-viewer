@@ -218,6 +218,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          // FACES
          const scene = this.getExecutionContext();
          const objectTransform = scene.createNode("Transform");
+         objectTransform.scale = new X3D.SFVec3f(polyScaleFactor, polyScaleFactor, polyScaleFactor);
          scene.addNamedNode("OffTransform", objectTransform);
 
          const faceTransform = this.facesShape(vertices, offData.faces, offData.facesColor);

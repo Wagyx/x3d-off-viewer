@@ -217,6 +217,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          // FACES
          const scene = this.getExecutionContext();
          const objectTransform = scene.createNode("Transform");
+         objectTransform.scale = new X3D.SFVec3f(polyScaleFactor, polyScaleFactor, polyScaleFactor);
          scene.addNamedNode("OffTransform", objectTransform);
 
          const faceTransform = this.facesShape(vertices, offData.faces, offData.facesColor);
@@ -228,8 +229,6 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          objectTransform.children.push(edgeTransform);
 
          const vertexTransform = this.verticesShape(vertices, offData.verticesColor);
-         // const vertexTransform = this.verticesShapePointSet(vertices, offData.verticesColor);
-         // const vertexTransform = this.verticesShapeInstance(vertices, offData.verticesColor);
          scene.addNamedNode("VerticesTransform", vertexTransform);
          objectTransform.children.push(vertexTransform);
 
@@ -309,7 +308,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const appearance = scene.createNode("Appearance");
          const material = scene.createNode("Material");
          const pointProps = scene.createNode("PointProperties");
-         pointProps.pointSizeScaleFactor = 4;
+         pointProps.pointSizeScaleFactor = 40;
          pointProps.pointSizeMaxValue = 1000;
          pointProps.attenuation = new X3D.SFVec3f(0, 0.1, 0);
          appearance.pointProperties = pointProps;
