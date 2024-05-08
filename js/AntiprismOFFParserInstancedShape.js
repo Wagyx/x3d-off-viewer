@@ -53,6 +53,14 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          // envLight.attenuation = new X3D.SFVec3f(0, 0, 0);
          // scene.rootNodes.push(envLight);
 
+         const camera = scene.createNode("Viewpoint");
+         camera.fieldOfView = 30.0 * Math.PI / 180.0;
+         camera.nearDistance = 0.1;
+         camera.farDistance = 1000;
+         const position = [0, 0, 45];
+         camera.position = new X3D.SFVec3f(...position);
+         scene.rootNodes.push(camera);
+
          const background = scene.createNode("Background");
          scene.addNamedNode("Background", background);
          background.skyColor = new X3D.MFColor(new X3D.SFColor(0.8, 0.8, 0.8));
@@ -64,6 +72,13 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          return scene;
       },
+      defaultVertexRadius() {
+         return 0.03;
+      },
+      defaultEdgeRadius() {
+         return 0.02;
+      },
+
       textToPrimaries() {
          const _face_vertex_data_separator_pattern = /\s+/;
 
@@ -211,9 +226,9 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          const scaleFactor = edgesLength.reduce((partialSum, a) => partialSum + a, 0) / edgesLength.length;
          // console.log(Math.min.apply(Math, edgesLength));
          // console.log(Math.max.apply(Math, edgesLength));
-         for (let i = 0, l = vertices.length; i < l; i++) {
-            vertices[i] = vertices[i].divide(scaleFactor);
-         }
+         // for (let i = 0, l = vertices.length; i < l; i++) {
+         //    vertices[i] = vertices[i].divide(scaleFactor);
+         // }
 
          // FACES
          const scene = this.getExecutionContext();
@@ -225,11 +240,11 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          scene.addNamedNode("FacesTransform", faceTransform);
          objectTransform.children.push(faceTransform);
 
-         const edgeTransform = this.edgesShape(vertices, offData.edges, offData.edgesColor);
+         const edgeTransform = this.edgesShape(vertices, offData.edges, offData.edgesColor, scaleFactor);
          scene.addNamedNode("EdgesTransform", edgeTransform);
          objectTransform.children.push(edgeTransform);
 
-         const vertexTransform = this.verticesShape(vertices, offData.verticesColor);
+         const vertexTransform = this.verticesShape(vertices, offData.verticesColor, scaleFactor);
          scene.addNamedNode("VerticesTransform", vertexTransform);
          objectTransform.children.push(vertexTransform);
 
@@ -299,7 +314,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          return transform;
       },
 
-      verticesShape(vertices, verticesColor) {
+      verticesShape(vertices, verticesColor, scaleFactor) {
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
          const shape = scene.createNode("InstancedShape");
@@ -313,14 +328,14 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
          shape.appearance = appearance;
 
          const geometry = scene.createNode("Sphere");
-         geometry.radius = 0.03;
+         geometry.radius = this.defaultVertexRadius()*scaleFactor;
          shape.geometry = geometry;
 
          groupTransform.children.push(shape);
          return groupTransform;
       },
 
-      edgesShape(vertices, edges, edgesColor) {
+      edgesShape(vertices, edges, edgesColor, scaleFactor) {
          const scene = this.getExecutionContext();
          const groupTransform = scene.createNode("Transform");
          const shape = scene.createNode("InstancedShape");
@@ -352,7 +367,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          const geometry = scene.createNode("Cylinder");
          scene.addNamedNode("EdgeGeometry", geometry);
-         geometry.radius = 0.02;
+         geometry.radius = this.defaultEdgeRadius()*scaleFactor;
          geometry.height = 1;
          shape.geometry = geometry;
 

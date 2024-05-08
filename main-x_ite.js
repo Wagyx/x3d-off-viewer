@@ -264,6 +264,8 @@ function modifyOff(event) {
     // modifySceneTriangleSet(scene, parameters);
     // modifyScene2DSets(scene, parameters);
 
+
+
     // Background
     if (parameters.backgroundColor !== null) {
         const background = scene.getNamedNode("Background");
