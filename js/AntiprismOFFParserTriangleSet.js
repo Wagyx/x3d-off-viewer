@@ -328,7 +328,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          const icoPts = this.createIcoSphere(2);
          const N = icoPts.length / 3;
-         console.log(N);
+
          const colorNode = scene.createNode("ColorRGBA");
          const colData = new X3D.MFColorRGBA();
          colData.length = verticesColor.length * N;
@@ -375,7 +375,7 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
 
          const pts = this.createCylinder(12);
          const N = pts.length / 3;
-         console.log(N);
+
          const colorNode = scene.createNode("ColorRGBA");
          const colData = new X3D.MFColorRGBA();
          colData.length = edgesColor.length * N;

@@ -176,8 +176,8 @@ Object.assign(Object.setPrototypeOf(OFFParser.prototype, X3D.X3DParser.prototype
                hasTransparency = true;
             }
          }
-         console.log(facesColor);
-         console.log(hasTransparency);
+         // console.log(facesColor);
+         // console.log(hasTransparency);
          let colorNode, colData;
          if (hasTransparency) {
             colorNode = scene.createNode("ColorRGBA");

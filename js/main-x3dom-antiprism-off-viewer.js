@@ -1,30 +1,5 @@
 init();
 
-function genCube() {
-    const cube = {
-        points: [
-            [0.5, 0.5, 0.5],
-            [0.5, 0.5, -0.5],
-            [0.5, -0.5, 0.5],
-            [0.5, -0.5, -0.5],
-            [-0.5, 0.5, 0.5],
-            [-0.5, 0.5, -0.5],
-            [-0.5, -0.5, 0.5],
-            [-0.5, -0.5, -0.5]],
-        faces: [
-            [1, 2, 6, 5],
-            [1, 5, 7, 3],
-            [1, 3, 4, 2],
-            [8, 4, 3, 7],
-            [8, 7, 5, 6],
-            [8, 6, 2, 4],
-        ]
-    }
-    cube.points = cube.points.map(x => x.map(el => el * 2));
-    cube.faces = cube.faces.map(x => x.map(el => el - 1));
-    return cube;
-}
-
 function createIndexedFaceSet(points, faces, facesColor) {
     const geometry = document.createElement("IndexedFaceSet");
     geometry.setAttribute("solid", "false")
@@ -43,7 +18,6 @@ function createIndexedFaceSet(points, faces, facesColor) {
 
     return geometry;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////
 // PARSING ANTIPRISM OFF FILE FORMAT
