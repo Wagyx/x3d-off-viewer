@@ -12,28 +12,48 @@ Thanks to [Scott Vorthmann](https://github.com/vorth) for telling me about the X
 
 Start a local web server, if you don't know how more details [here](https://create3000.github.io/x_ite/setup-a-localhost-server/)
 I usually either
-- use vscode live server extension
-- or use a command line terminal and Python, cd to the project folder then run python -m http.server
+- use VSCode live server extension
+- use a command line terminal and Python, cd to the project folder then run python -m http.server
 
 
 ## How to use it within your web page
 
-### New way : using an integrated Parser for the OFF file
-Take a look at the x_ite-off-viewer.html:
+In this repo you will find many variations to help you include an OFF file into your webpage.
+The first thing to consider is whether you want to use the X3DOM or the X_ITE library.
+Then you can choose to use the vanilla version which only displays the model faces or the Antiprism version which is an extension of the OFF format and includes a description of edges and vertices, attributing colors to them. A scene using an Antiprism model have additional geometry elements to represent the vertices (spheres) and the edges (cylinders).
 
-First, link the parser in the header. Yo can choose between several parser, each have their pros and cons:
-- AntiprismOFFParserTooManyShapes.js : the most complete but slow to load when the number of vertices and edges is large (>500).
-- AntiprismOFFParserInstancedShape.js : uses instances but there are no individual colors for vertices and edges
-- AntiprismOFFParserTriangleSet.js : uses manually crafted icospheres and cylinders
-- AntiprismOFFParser2DSets.js : uses 2D points and lines
+### With X3DOM
 
-Then, use the "x3d-canvas" tag with the off file as the "src" attribute.
+Take a look at the x3dom-*-off-viewer.html:
+
+First, link x_ite.min.js, and the chosen main-x3dom-*.js (at the end of the <body>).
+Then, use the "x3d" tag with the off file as the "filename" attribute.
+
+`<x3d-canvas filename="./off/U1.off"><scene></scene></x3d>`
+
+You can also set some other attributes (for the Antiprism version only):
+- vertexRadius
+- edgeRadius
+
+### With X_ITE
+For vanilla and Antiprism off file, just use the "x3d-canvas" tag with the off file as the "src" attribute to include a 3D model in your webpage as you would with a VRML or X3D file.
+
 Example : `<x3d-canvas src="./off/U1.off"></x3d-canvas>`
 
-If you would like to support parameters to modify the scene, this is achieved with the main-x_ite.js script, please link it in the header.
-Then you have to choose the correct function to handle parameters, search for the word *IMPORTANT* and then comment/uncomment the modifyScene that you need to use below it. I know this is a bit cumbersome to do for now.
+For Vanilla : have a look at x_ite-vanilla-off-viewer.html
 
-The parameters are set with the following attributes of the x3d-canvas:
+For Antiprism models, the integration into the X_ITE browser comes with different flavors mostly driven by the technique used to create the geometry for the edges and vertices.
+Take a look at the various x_ite-antiprism-off-viewer-*.html files to see how to link the Parser script and use the x3d-canvas.
+
+The pros and cons of each technique are:
+- MultiInstancedShape : the overall best, if you have to pick any it is the one.
+- TooManyShapes : no smart things but slow to load when the number of vertices and edges is large (>500).
+- TriangleSet : uses manually crafted icospheres and cylinders, a bit ugly and slow to load for large models
+- 2DSets : uses 2D points and lines, the look is too flat
+
+
+If you would like to support parameters to modify the scene, don't forget to include the corresponding main-x_ite-antiprism-off-*.js file.
+The parameters are set with the following attributes on the x3d-canvas:
 - vertexRadius : default is "0.03"
 - edgeRadius : default is "0.02"
 - backgroundColor :  default is "cccccc", color is in hexadecimal format
@@ -48,17 +68,6 @@ The parameters are set with the following attributes of the x3d-canvas:
 
 Example : `<x3d-canvas src="./off/U1.off" vertexRadius="0.2" edgeRadius="0.1" rotationSpeed="1" rotationAxis="0,1,0" vertexColor="00ff33" edgeColor="3300ff" faceColor="ff3300" verticesActive="true" edgesActive="false" facesActive="false" onload="modifyOff(event)"></x3d-canvas>`
 
-### Old way : building DOM elements
-Take a look at the x3d-off-viewer.html:
-
-First, link x_ite.min.js, main.js (at the end of the <body>).
-Then, use the "x3d-canvas" tag with the off file as the "filename" attribute.
-You can also set some other attributes:
-- vertexRadius
-- edgeRadius
 
 ## TODOS
-- fix the issue with transparency and double sided faces
-- an EnvironmentLight
 - better interactions
-- optimizing (instances)
