@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8"/>
-  <!-- <meta name="viewport" content="width=1080"/> -->
 
-  <!-- X_ITE requirements -->
-  <script src="https://create3000.github.io/code/x_ite/latest/x_ite.min.js"></script>
+  <!-- X3DOM requirements -->
+  <link rel="stylesheet" href="http://www.x3dom.org/release/x3dom.css">
+  <script src="http://www.x3dom.org/release/x3dom.js"></script>
 
   <style>
-    x3d-canvas {
-      width: 100%;
+    x3d {
+      width: 45%;
       height: auto;
       aspect-ratio: 1;
     }
@@ -17,20 +18,30 @@
 
 </head>
 <body>
-  <!-- <x3d-canvas filename="/off/U1.off" vertexRadius="0.1"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/U1.off" edgeRadius="0.05"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/U2.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/ico_rand.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/icube.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/J71.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/J81.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/J91.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/model3.off"></x3d-canvas> -->
-  <!-- <x3d-canvas filename="/off/model3a.off"></x3d-canvas> -->
-  <x3d-canvas filename="/off/uc61.off"></x3d-canvas>
+  <!-- <x3d filename="/off/U1.off"><scene></scene></x3d> -->
+  <!-- <x3d filename="/off/U2.off"><scene></scene></x3d> -->
+  <x3d filename="/off/ico_rand.off"><scene></scene></x3d>
+  <x3d filename="/off/icube.off"><scene></scene></x3d>
+  <x3d filename="/off/model3.off"><scene></scene></x3d>
+  <x3d filename="/off/model3a.off"><scene></scene></x3d>
+  <x3d filename="/off/uc61.off"><scene></scene></x3d>
+  <x3d filename="/off/mixed_cols.off"><scene></scene></x3d>
+  <x3d filename="/off/wincube.off"><scene></scene></x3d>
+  
+  <!-- <x3d filename="/off/J71.off"><scene></scene></x3d> -->
+  <!-- <x3d filename="/off/J81.off"><scene></scene></x3d> -->
+  <!-- <x3d filename="/off/J91.off"><scene></scene></x3d> -->
+  <!-- <x3d filename="/off/U1.off" vertexRadius="0.1"><scene></scene></x3d> -->
+  <!-- <x3d filename="/off/U1.off" edgeRadius="0.05"><scene></scene></x3d> -->
+  <!-- <x3d filename="/off/U2.off" vertexRadius = 0.03 edgeRadius="0.02"><scene></scene></x3d> -->
+  <!-- <x3d width='500px' height='400px'> 
+    <scene>
+	<inline url="myScene.x3d"> </inline> 
+    </scene> 
+    </x3d>   -->
   <!-- <x3d-canvas filename="/off/mixed_cols.off"></x3d-canvas> -->
   <!-- <x3d-canvas filename="/off/wincube.off"></x3d-canvas> -->
-  
-  </body>
+
   <script src="/main-x3d.js"></script>
+</body>
 </html>

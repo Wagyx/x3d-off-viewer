@@ -9,9 +9,11 @@ Thanks to [Scott Vorthmann](https://github.com/vorth) for telling me about the X
 
 ## How to run
 
-Start a local web server, more details [here](https://create3000.github.io/x_ite/setup-a-localhost-server/)
-- using vscode live server extension
-- using a command line terminal and Python, cd to the project folder then run python -m http.server
+Start a local web server, if you don't know how more details [here](https://create3000.github.io/x_ite/setup-a-localhost-server/)
+I usually either
+- use vscode live server extension
+- or use a command line terminal and Python, cd to the project folder then run python -m http.server
+
 
 ## How to use it within your web page
 
@@ -19,7 +21,7 @@ Start a local web server, more details [here](https://create3000.github.io/x_ite
 Take a look at the x_ite-off-viewer.html:
 
 First, link the parser in the header. Yo can choose between several parser, each have their pros and cons:
-- AntiprismOFFParserTooManyShapes.js : the most complete but slow to load when the number of vertices and edges is too large (>500).
+- AntiprismOFFParserTooManyShapes.js : the most complete but slow to load when the number of vertices and edges is large (>500).
 - AntiprismOFFParserInstancedShape.js : uses instances but there are no individual colors for vertices and edges
 - AntiprismOFFParserTriangleSet.js : uses manually crafted icospheres and cylinders
 - AntiprismOFFParser2DSets.js : uses 2D points and lines
@@ -27,7 +29,7 @@ First, link the parser in the header. Yo can choose between several parser, each
 Then, use the "x3d-canvas" tag with the off file as the "src" attribute.
 Example : `<x3d-canvas src="./off/U1.off"></x3d-canvas>`
 
-If you would like too support parameters to modify the scene, this is achieved with the main-x_ite.js script, please link it in the header.
+If you would like to support parameters to modify the scene, this is achieved with the main-x_ite.js script, please link it in the header.
 Then you have to choose the correct function to handle parameters, search for the word *IMPORTANT* and then comment/uncomment the modifyScene that you need to use below it. I know this is a bit cumbersome to do for now.
 
 The parameters are set with the following attributes of the x3d-canvas:

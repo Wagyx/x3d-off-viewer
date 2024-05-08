@@ -1,9 +1,4 @@
-
-console.log("start")
-const gDefaultColor = { vertex: [1.0, 0.5, 0.0], edge: [0.8, 0.6, 0.8], face: [0.8, 0.9, 0.9] };
 init();
-console.log("end")
-
 
 function genCube() {
     const cube = {
@@ -31,29 +26,19 @@ function genCube() {
 }
 
 function createIndexedFaceSet(points, faces, facesColor) {
-    const actualColors = [];
-    const actualFaces = [];
-    for (let faceNum = 0; faceNum < faces.length; faceNum++) {
-        if (facesColor[faceNum].length == 4 && facesColor[faceNum][3] == 0.0) {
-            continue;
-        }
-        actualColors.push(facesColor[faceNum]);
-        actualFaces.push(faces[faceNum]);
-    }
-
     const geometry = document.createElement("IndexedFaceSet");
     geometry.setAttribute("solid", "false")
     geometry.setAttribute("convex", "false")
     geometry.setAttribute("colorPerVertex", "false");
-    geometry.setAttribute("coordIndex", actualFaces.map(x => x.join(",") + ",-1"
+    geometry.setAttribute("coordIndex", faces.map(x => x.join(",") + ",-1"
     ).join(","));
 
     const coordinates = document.createElement("Coordinate");
     coordinates.setAttribute("point", points.map(x => x.join(" ")).join(","));
     geometry.appendChild(coordinates);
 
-    const colorNode = document.createElement("Color");
-    colorNode.setAttribute("color", actualColors.map(x => x.join(" ")).join(","));
+    const colorNode = document.createElement("ColorRGBA");
+    colorNode.setAttribute("color", facesColor.map(x => x.join(" ")).join(","));
     geometry.appendChild(colorNode);
 
     return geometry;
@@ -78,19 +63,29 @@ async function readAntiprismOffFile(url) {
 }
 
 function addMissingColors(obj) {
+    const gDefaultColor = { vertex: [1.0, 0.5, 0.0, 1.0], edge: [0.8, 0.6, 0.8, 1.0], face: [0.8, 0.9, 0.9, 1.0] };
     for (let i = 0, l = obj.verticesColor.length; i < l; ++i) {
         if (obj.verticesColor[i] === undefined) {
             obj.verticesColor[i] = gDefaultColor.vertex;
+        }
+        if (obj.verticesColor[i].length == 3) {
+            obj.verticesColor[i].push(1.0);
         }
     }
     for (let i = 0, l = obj.edgesColor.length; i < l; ++i) {
         if (obj.edgesColor[i] === undefined) {
             obj.edgesColor[i] = gDefaultColor.edge;
         }
+        if (obj.edgesColor[i].length == 3) {
+            obj.edgesColor[i].push(1.0);
+        }
     }
     for (let i = 0, l = obj.facesColor.length; i < l; ++i) {
         if (obj.facesColor[i] === undefined) {
             obj.facesColor[i] = gDefaultColor.face;
+        }
+        if (obj.facesColor[i].length == 3) {
+            obj.facesColor[i].push(1.0);
         }
     }
     return obj;
@@ -294,8 +289,8 @@ function substractVec(u, v) {
     return [u[0] - v[0], u[1] - v[1], u[2] - v[2]];
 }
 
-function divideScalar(vec,s){
-    return [vec[0]/s, vec[1]/s, vec[2]/s];
+function divideScalar(vec, s) {
+    return [vec[0] / s, vec[1] / s, vec[2] / s];
 }
 
 function arraySum(arr) {
@@ -309,48 +304,45 @@ function arrayAverage(arr) {
 ////////////////////////////////////////////////////////////////////////////////////
 
 function init() {
-
-    const canvases = document.getElementsByTagName('x3d-canvas');
-    
+    const canvases = document.getElementsByTagName('x3d');
     for (let canvas of canvases) {
-        
-        const filename = canvas.getAttribute("filename");
-        let edgeRadius = canvas.getAttribute("edgeRadius");
-        if (!edgeRadius){ edgeRadius = 0.03; }
-        let vertexRadius = canvas.getAttribute("vertexRadius");
-        if (!vertexRadius){ vertexRadius = 0.02; }
 
+        let vertexRadius = canvas.getAttribute("vertexRadius");
+        if (!vertexRadius) { vertexRadius = 0.03; } else { vertexRadius = parseFloat(vertexRadius, 10); }
+        let edgeRadius = canvas.getAttribute("edgeRadius");
+        if (!edgeRadius) { edgeRadius = 0.02; } else { edgeRadius = parseFloat(edgeRadius, 10); }
+
+        const filename = canvas.getAttribute("filename");
         (async () => {
             const offData = await readAntiprismOffFile(filename);
-            // console.log(offData);
-            
-            const x3dnode = document.createElement("X3D");
-            x3dnode.setAttribute("profile", "Interactive");
-            x3dnode.setAttribute("version", "4.0");
-            x3dnode.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema-instance");
-            x3dnode.setAttribute("xsd:noNamespaceSchemaLocation", "http://www.web3d.org/specifications/x3d-4.0.xsd");
-            
-            const scene = document.createElement("Scene");
-            x3dnode.appendChild(scene);
+
+            const scene = canvas.getElementsByTagName("Scene")[0];
 
             const background = document.createElement("Background");
-            background.setAttribute("skycolor", "0.8 0.8 0.8");
+            background.setAttribute("skyColor", "0.8 0.8 0.8");
             scene.appendChild(background);
-            
-            
 
-            const envLight = document.createElement("EnvironmentLight");
-            envLight.setAttribute("color", "1 1 1");
-            envLight.setAttribute("intensity", "40");
-            scene.appendChild(envLight);
+            // const envLight = document.createElement("EnvironmentLight");
+            // envLight.setAttribute("color", "1 1 1");
+            // envLight.setAttribute("intensity", "0");
+            // envLight.setAttribute("ambienIntensity", "1");
+            // scene.appendChild(envLight);
             // const dirLight = document.createElement("DirectionalLight");
             // dirLight.setAttribute("color", "1 1 1");
             // dirLight.setAttribute("intensity", "40");
             // scene.appendChild(dirLight);
 
-            //todo scale to have edge length be unit
+            const camera = document.createElement("Viewpoint");
+            camera.setAttribute("fieldOfView", 30.0 * Math.PI / 180.0); // radians ...
+            camera.setAttribute("nearClippingPlane", 0.1);
+            camera.setAttribute("farClippingPlane", 1000);
+            const position = [0, 0, 45];
+            camera.setAttribute("position", position.join(","));
+            scene.appendChild(camera);
 
-            // convert vertex data to THREE.js vectors
+            //Centering model and scaling to fit inside a sphere
+
+            // compute center
             const vertices = [];
             let cnt = [0, 0, 0];
             for (let v of offData.vertices) {
@@ -373,9 +365,14 @@ function init() {
                 edgesLength.push(normVec(substractVec(pt1, pt0)));
             }
             const scaleFactor = arrayAverage(edgesLength);
-            for (let i = 0; i < vertices.length; i++) {
-                vertices[i] = divideScalar(vertices[i], scaleFactor);
-            }
+            // for (let i = 0; i < vertices.length; i++) {
+            //     vertices[i] = divideScalar(vertices[i], scaleFactor);
+            // }
+
+            const objectTransform = document.createElement("Transform");
+            objectTransform.setAttribute("scale", [polyScaleFactor, polyScaleFactor, polyScaleFactor].join(", "));
+            edgeRadius = edgeRadius * scaleFactor;
+            vertexRadius = vertexRadius * scaleFactor;
 
             // FACES
             {
@@ -390,27 +387,15 @@ function init() {
                 const geometry = createIndexedFaceSet(vertices, offData.faces, offData.facesColor);
                 shape.appendChild(geometry);
 
-                scene.appendChild(shape);
+                objectTransform.appendChild(shape);
             }
 
             // VERTICES
-            // const particles = document.createElement("ParticleSystem");
-            // material.setAttribute("geometryType", "GEOMETRY");
-            // material.setAttribute("maxParticles", ""+offData.vertices.length);
-            // const partGeom = document.createElement("Sphere");
-
-            // particles.appendChild(partGeom);
-            // shape.appendChild(particles);
-
             {
+                const vertTransform = document.createElement("Transform");
                 for (let i = 0, l = vertices.length; i < l; ++i) {
                     const point = vertices[i];
                     const color = offData.verticesColor[i];
-
-                    if (color.length == 4 && color[3] == 0.0) {
-                        continue;
-                    }
-
                     const transform = document.createElement("Transform");
                     transform.setAttribute("translation", point.join(" "));
 
@@ -418,7 +403,8 @@ function init() {
 
                     const appearance = document.createElement("Appearance");
                     const material = document.createElement("Material");
-                    material.setAttribute("diffuseColor", color.join(" "));
+                    material.setAttribute("diffuseColor", color.slice(0, 3).join(" "));
+                    material.setAttribute("transparency", "" + (1 - color[3]));
                     appearance.appendChild(material);
                     shape.appendChild(appearance);
 
@@ -426,69 +412,52 @@ function init() {
                     geom.setAttribute("radius", vertexRadius);
                     shape.appendChild(geom);
                     transform.appendChild(shape);
-                    scene.appendChild(transform);
+                    vertTransform.appendChild(transform);
                 }
-
-
-                // ProtoBody
-                // const shape = document.createElement("InstancedShape");
-                // const appearance = document.createElement("Appearance");
-                // const material = document.createElement("Material");
-                // material.setAttribute("diffuseColor", "0.5 0.5 0.5");
-                // appearance.appendChild(material);
-                // shape.appendChild(appearance);
-                // // const translations = vertices.map(x => x.join(" ")).join(",");
-                // const translations = ["0 0 0",];
-                // shape.setAttribute("translations",translations)
-
-                // const partGeom = document.createElement("Sphere");
-                // shape.appendChild(partGeom);
-
-                // scene.appendChild(shape);
-
+                objectTransform.appendChild(vertTransform);
             }
 
             //EDGES
             {
+                const edgeTransform = document.createElement("Transform");
                 const cylDir = [0, 1, 0]; // the cylinder direction
                 for (let i = 0, l = offData.edges.length; i < l; ++i) {
                     const e = offData.edges[i];
                     const color = offData.edgesColor[i];
-                    if (color.length == 4 && color[3] == 0.0) {
-                        continue;
-                    }
                     const pt0 = vertices[e[0]];
                     const pt1 = vertices[e[1]];
                     const mid = midPoint(pt0, pt1);
                     const direction = substractVec(pt1, pt0);
                     const length = normVec(direction);
                     const rot = rotationFrom(cylDir, direction);
+                    const scale = [edgeRadius, length, edgeRadius];
 
                     const transform = document.createElement("Transform");
                     transform.setAttribute("translation", mid.join(","));
                     transform.setAttribute("rotation", rot.join(","));
+                    transform.setAttribute("scale", scale.join(","));
 
                     const shape = document.createElement("Shape");
 
                     const appearance = document.createElement("Appearance");
                     const material = document.createElement("Material");
-                    material.setAttribute("diffuseColor", color.join(" "));
+                    material.setAttribute("diffuseColor", color.slice(0, 3).join(" "));
+                    material.setAttribute("transparency", "" + (1 - color[3]));
                     appearance.appendChild(material);
                     shape.appendChild(appearance);
 
                     const geom = document.createElement("Cylinder");
-                    geom.setAttribute("height", length);
-                    geom.setAttribute("radius", edgeRadius);
+                    geom.setAttribute("height", 1);
+                    geom.setAttribute("radius", 1);
                     shape.appendChild(geom);
                     transform.appendChild(shape);
                     scene.appendChild(transform);
-
+                    edgeTransform.appendChild(transform);
                 }
+                objectTransform.appendChild(edgeTransform);
             }
-            canvas.appendChild(x3dnode)
-
-        })()
-
-
+            scene.appendChild(objectTransform);
+        })();
     }
+
 }
