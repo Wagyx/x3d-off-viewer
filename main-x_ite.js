@@ -84,12 +84,14 @@ function parseArray(arrString) {
 
 function modifySceneTooManyShapes(scene, parameters) {
     if (parameters.vertexRadius !== null) {
+        const defaultRadius = OFFParser.prototype.defaultVertexRadius();
         const geom = scene.getNamedNode("VertexGeometry");
-        geom.radius = parseFloat(parameters.vertexRadius, 10);
+        geom.radius = geom.radius * parseFloat(parameters.vertexRadius, 10) / defaultRadius;
     }
     if (parameters.edgeRadius !== null) {
+        const defaultRadius = OFFParser.prototype.defaultEdgeRadius();
         const geom = scene.getNamedNode("EdgeGeometry");
-        geom.radius = parseFloat(parameters.edgeRadius, 10);
+        geom.radius = geom.radius * parseFloat(parameters.edgeRadius, 10) / defaultRadius;
     }
 
     if (parameters.faceColor !== null) {
@@ -128,10 +130,12 @@ function modifySceneTooManyShapes(scene, parameters) {
 
 function modifySceneInstancedShape(scene, parameters) {
     if (parameters.vertexRadius !== null) {
-        scene.getNamedNode("VertexShape").geometry.radius = parseFloat(parameters.vertexRadius, 10);
+        const defaultRadius = OFFParser.prototype.defaultVertexRadius();
+        scene.getNamedNode("VertexShape").geometry.radius *= parseFloat(parameters.vertexRadius, 10) / defaultRadius;
     }
     if (parameters.edgeRadius !== null) {
-        scene.getNamedNode("EdgeShape").geometry.radius = parseFloat(parameters.edgeRadius, 10);
+        const defaultRadius = OFFParser.prototype.defaultEdgeRadius();
+        scene.getNamedNode("EdgeShape").geometry.radius *= parseFloat(parameters.edgeRadius, 10) / defaultRadius;
     }
 
     if (parameters.faceColor !== null) {
@@ -156,6 +160,54 @@ function modifySceneInstancedShape(scene, parameters) {
     }
     if (parameters.verticesActive == "false") {
         scene.getNamedNode("VertexShape").visible = false;
+    }
+
+}
+
+function modifySceneMultipleInstancedShape(scene, parameters) {
+    if (parameters.edgeRadius !== null) {
+        const defaultRadius = OFFParser.prototype.defaultEdgeRadius();
+        for (let shape of scene.getNamedNode("EdgesTransform").children) {
+            shape.geometry.radius *= parseFloat(parameters.edgeRadius, 10) / defaultRadius;
+        }
+    }
+    if (parameters.vertexRadius !== null) {
+        const defaultRadius = OFFParser.prototype.defaultVertexRadius();
+        for (let shape of scene.getNamedNode("VerticesTransform").children) {
+            shape.geometry.radius *= parseFloat(parameters.vertexRadius, 10) / defaultRadius;
+        }
+    }
+
+    if (parameters.faceColor !== null) {
+        const color = new X3D.SFColor(...parseHexColor(parameters.faceColor).slice(0, 3));
+        const geom = scene.getNamedNode("FacesTransform").children[0].geometry;
+        geom.color.color = new X3D.MFColor(color);
+    }
+    if (parameters.edgeColor !== null) {
+        const color = new X3D.SFColor(...parseHexColor(parameters.edgeColor).slice(0, 3));
+        for (let shape of scene.getNamedNode("EdgesTransform").children) {
+            shape.appearance.material.diffuseColor = color;
+        }
+    }
+    if (parameters.vertexColor !== null) {
+        const color = new X3D.SFColor(...parseHexColor(parameters.vertexColor).slice(0, 3));
+        for (let shape of scene.getNamedNode("VerticesTransform").children) {
+            shape.appearance.material.diffuseColor = color;
+        }
+    }
+
+    if (parameters.facesActive == "false") {
+        scene.getNamedNode("FacesTransform").children[0].visible = false;
+    }
+    if (parameters.edgesActive == "false") {
+        for (let shape of scene.getNamedNode("EdgesTransform").children) {
+            shape.visible = false;
+        }
+    }
+    if (parameters.verticesActive == "false") {
+        for (let shape of scene.getNamedNode("VerticesTransform").children) {
+            shape.visible = false;
+        }
     }
 
 }
@@ -238,6 +290,7 @@ function modifyScene2DSets(scene, parameters) {
 
 function modifyOff(event) {
     const xBrowser = X3D.getBrowser(event.target);
+    xBrowser.setBrowserOption("StraightenHorizon", false);
     const scene = xBrowser.currentScene;
 
     const parameters = {
@@ -259,8 +312,9 @@ function modifyOff(event) {
     // console.log("browser " + xBrowser.toXMLString());
 
     // *IMPORTANT* : choose this in accordance with the Parser
-    modifySceneTooManyShapes(scene, parameters);
+    // modifySceneTooManyShapes(scene, parameters);
     // modifySceneInstancedShape(scene, parameters);
+    modifySceneMultipleInstancedShape(scene, parameters);
     // modifySceneTriangleSet(scene, parameters);
     // modifyScene2DSets(scene, parameters);
 
@@ -291,7 +345,7 @@ function modifyOff(event) {
     // Routes
     scene.addRoute(timeSensorNode, "fraction_changed", interpolatorNode, "set_fraction");
     scene.addRoute(interpolatorNode, "value_changed", transformNode, "set_rotation");
-    console.log("browser " + scene.toXMLString());
+    // console.log("browser " + scene.toXMLString());
 
 }
 
