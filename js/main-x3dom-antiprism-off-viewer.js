@@ -281,9 +281,9 @@ function init() {
     const canvases = document.getElementsByTagName('x3d');
     for (let canvas of canvases) {
 
-        let vertexRadius = canvas.getAttribute("vertexRadius");
+        let vertexRadius = canvas.getAttribute("data-vertex-adius");
         if (!vertexRadius) { vertexRadius = 0.03; } else { vertexRadius = parseFloat(vertexRadius, 10); }
-        let edgeRadius = canvas.getAttribute("edgeRadius");
+        let edgeRadius = canvas.getAttribute("data-edge-radius");
         if (!edgeRadius) { edgeRadius = 0.02; } else { edgeRadius = parseFloat(edgeRadius, 10); }
 
         const filename = canvas.getAttribute("filename");
