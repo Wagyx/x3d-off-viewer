@@ -2,12 +2,17 @@ function parseColor(colString) {
     return colString.split(",").map(x => parseFloat(x, 10) / 255.0);
 }
 
-function parseHexColor(colorHexString) {
-    return [
-        parseInt(Number("0x" + colorHexString.slice(0, 2)), 10) / 255.0,
-        parseInt(Number("0x" + colorHexString.slice(2, 4)), 10) / 255.0,
-        parseInt(Number("0x" + colorHexString.slice(4, 6)), 10) / 255.0
+function parseHexColor(pString) {
+    if (!pString || pString[0] !== "#") {
+        return [0.0,0.0,0.0,1.0];
+    }
+    const res = [
+        parseInt(pString.slice(1, 3), 16) / 255.0,
+        parseInt(pString.slice(3, 5), 16) / 255.0,
+        parseInt(pString.slice(5, 7), 16) / 255.0,
+        (pString.length > 7) ? parseInt(pString.slice(7, 9), 16) / 255.0 : 1.0
     ];
+    return res;
 }
 
 function parseArray(arrString) {
@@ -27,20 +32,33 @@ function modifySceneTooManyShapes(scene, parameters) {
     }
 
     if (parameters.faceColor !== null) {
-        const color = new X3D.SFColor(...parseHexColor(parameters.faceColor));
+        const color = parseHexColor(parameters.faceColor);
         const geom = scene.getNamedNode("FacesTransform").children[0].geometry;
-        geom.color.color = new X3D.MFColor(color);
+        if (color[3] < 1.0){
+            const sfcolor = new X3D.SFColorRGBA(...color);
+            geom.color = scene.createNode("ColorRGBA");
+            geom.color.color = new X3D.MFColorRGBA(sfcolor);
+        }
+        else{
+            const sfcolor = new X3D.SFColor(...color.slice(0,3));
+            geom.color = scene.createNode("Color");
+            geom.color.color = new X3D.MFColor(sfcolor);
+        }
     }
     if (parameters.edgeColor !== null) {
-        const color = new X3D.SFColor(...parseHexColor(parameters.edgeColor));
+        const color = parseHexColor(parameters.edgeColor);
+        const sfcolor = new X3D.SFColor(...color.slice(0, 3));
         for (let el of scene.getNamedNode("EdgesTransform").children) {
-            el.children[0].appearance.material.diffuseColor = color;
+            el.children[0].appearance.material.diffuseColor = sfcolor;
+            el.children[0].appearance.material.transparency = 1-color[3];
         }
     }
     if (parameters.vertexColor !== null) {
-        const color = new X3D.SFColor(...parseHexColor(parameters.vertexColor));
+        const color = parseHexColor(parameters.vertexColor);
+        const sfcolor = new X3D.SFColor(...color.slice(0, 3));
         for (let el of scene.getNamedNode("VerticesTransform").children) {
-            el.children[0].appearance.material.diffuseColor = color;
+            el.children[0].appearance.material.diffuseColor = sfcolor;
+            el.children[0].appearance.material.transparency = 1-color[3];
         }
     }
 
@@ -67,24 +85,24 @@ function modifyOff(event) {
     const scene = xBrowser.currentScene;
 
     const parameters = {
-        vertexRadius: event.target.getAttribute("vertexRadius"),
-        edgeRadius: event.target.getAttribute("edgeRadius"),
-        backgroundColor: event.target.getAttribute("backgroundColor"),
-        rotationSpeed: event.target.getAttribute("rotationSpeed"),
-        rotationAxis: event.target.getAttribute("rotationAxis"),
-        vertexColor: event.target.getAttribute("vertexColor"),
-        edgeColor: event.target.getAttribute("edgeColor"),
-        faceColor: event.target.getAttribute("faceColor"),
-        verticesActive: event.target.getAttribute("verticesActive"),
-        edgesActive: event.target.getAttribute("edgesActive"),
-        facesActive: event.target.getAttribute("facesActive"),
+        vertexRadius: event.target.getAttribute("data-vertex-radius"),
+        edgeRadius: event.target.getAttribute("data-edge-radius"),
+        backgroundColor: event.target.getAttribute("data-background-color"),
+        rotationSpeed: event.target.getAttribute("data-rotation-speed"),
+        rotationAxis: event.target.getAttribute("data-rotation-axis"),
+        vertexColor: event.target.getAttribute("data-vertex-color"),
+        edgeColor: event.target.getAttribute("data-edge-color"),
+        faceColor: event.target.getAttribute("data-face-color"),
+        verticesActive: event.target.getAttribute("data-vertices-active"),
+        edgesActive: event.target.getAttribute("data-edges-active"),
+        facesActive: event.target.getAttribute("data-faces-active"),
     }
     modifySceneTooManyShapes(scene, parameters);
 
     // Background
     if (parameters.backgroundColor !== null) {
         const background = scene.getNamedNode("Background");
-        background.skyColor = new X3D.MFColor(new X3D.SFColor(...parseHexColor(parameters.backgroundColor)));
+        background.skyColor = new X3D.MFColor(new X3D.SFColor(...parseHexColor(parameters.backgroundColor).slice(0,3)));
     }
 
     // Animation

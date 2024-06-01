@@ -29,7 +29,7 @@ Take a look at the x3dom-*-off-viewer.html:
 First, link x_ite.min.js, and the chosen main-x3dom-*.js (at the end of the <body>).
 Then, use the "x3d" tag with the off file as the "filename" attribute.
 
-`<x3d-canvas filename="./off/U1.off"><scene></scene></x3d>`
+`<x3d filename="./off/U1.off"><scene></scene></x3d>`
 
 You can also set some other attributes (for the Antiprism version only):
 - vertexRadius
@@ -54,19 +54,19 @@ The pros and cons of each technique are:
 
 If you would like to support parameters to modify the scene, don't forget to include the corresponding main-x_ite-antiprism-off-*.js file.
 The parameters are set with the following attributes on the x3d-canvas:
-- vertexRadius : default is "0.03"
-- edgeRadius : default is "0.02"
-- backgroundColor :  default is "cccccc", color is in hexadecimal format
-- rotationSpeed : default is "0"
-- rotationAxis : default is the vertical direction "0,1,0"
-- vertexColor : default if the original color from the off file, color is in hexadecimal format
-- edgeColor : default if the original color from the off file, color is in hexadecimal format
-- faceColor : default if the original color from the off file, color is in hexadecimal format
-- verticesActive : default is true, set to "false" to deactivate
-- edgesActive : default is true, set to "false" to deactivate 
-- facesActive : default is true, set to "false" to deactivate 
+- data-vertex-radius : default is "0.03"
+- data-edge-radius : default is "0.02"
+- data-background-color :  default is "#cccccc", color is in hexadecimal format
+- data-rotation-speed : default is "0"
+- data-rotation-axis : default is the vertical direction "0,1,0"
+- data-vertex-color : default is the original color from the off file, color is in hexadecimal format, you can have an alpha value e.g. "#ffffffaa"
+- data-edge-color : default is the original color from the off file, color is in hexadecimal format, you can have an alpha value e.g. "#ffffffaa"
+- data-face-color : default is the original color from the off file, color is in hexadecimal format, you can have an alpha value e.g. "#ffffffaa"
+- data-vertices-active : default is true, set to "false" to deactivate
+- data-edges-active : default is true, set to "false" to deactivate 
+- data-faces-active : default is true, set to "false" to deactivate 
 
-Example : `<x3d-canvas src="./off/U1.off" vertexRadius="0.2" edgeRadius="0.1" rotationSpeed="1" rotationAxis="0,1,0" vertexColor="00ff33" edgeColor="3300ff" faceColor="ff3300" verticesActive="true" edgesActive="false" facesActive="false" onload="modifyOff(event)"></x3d-canvas>`
+Example : `<x3d-canvas src="./off/U1.off" data-vertex-radius="0.2" data-edge-radius="0.1" data-rotation-speed="1" data-rotation-axis="0,1,0" data-vertex-color="#00ff33" data-edge-color="#3300ff" data-face-color="#ff3300"  data-background-color="#aaaaaa" onload="modifyOff(event)"></x3d-canvas>`
 
 
 ## TODOS
